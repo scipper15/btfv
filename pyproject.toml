@@ -8,13 +8,17 @@ packages = [{include = "src/scraper"}, {include = "src/shared/config"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
+beautifulsoup4 = "^4.12.3"
 pydantic-settings = "^2.5.2"
+requests = "^2.32.3"
 
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.6.6"
 mypy = "^1.11.2"
 pre-commit = "^3.8.0"
+ruff = "^0.6.6"
+types-requests = "^2.32.0.20240914"
+types-beautifulsoup4 = "^4.12.0.20240907"
 
 [build-system]
 requires = ["poetry-core"]
@@ -23,3 +27,60 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 mypy_path="src"
+
+
+[tool.ruff]
+target-version = "py312"
+
+exclude = [
+    ".git",      # Git directory
+    "__pycache__",  # Python's bytecode cache
+    "venv",      # Virtual environment
+    ".venv",     # Another common virtual environment folder
+    "migrations",  # If using Django, migrations often change and don't require linting
+]
+
+fix = false
+line-length = 88
+
+lint.select = [
+    "E",  # Pycodestyle's (formerly PEP8) Error codes: enforces PEP 8 style (most common style guide)
+    "F",  # Pyflakes: identifies unused imports, variables, and undefined names (helps catch typos and dead code)
+    "W",  # Additional pycodestyle warnings (e.g., line breaks before binary operators)
+    "C",  # McCabe complexity checker: reports on overly complex functions
+    "A",  # flake8-annotations: ensures that functions are type-annotated
+    "I",  # isort: ensures imports are sorted (alphabetically and grouped by standard, third-party, local imports)
+    "D",  # pydocstyle: enforces proper docstring conventions (ensures that code is properly documented)
+    "RUF",  # Ruff's internal rules: includes fast, commonly-used checks not covered by other rulesets
+]
+
+lint.ignore = [
+    "E203",  # Allow space before ':' in slices (needed when using black with Ruff)
+    "F841",  # Ignore warning for unused variables (useful in interactive shells or placeholders like _)
+    "D100",  # Missing docstring in public module
+    "D101",  # Missing docstring in public class
+    "D102",  # Missing docstring in public method
+    "D103",  # Missing docstring in public function
+    "D104",  # Missing docstring in public package
+    "D107",  # Missing docstring in ´__init__´
+
+]
+
+# Add plugins or additional checks (like flake8-docstrings for better docstring validation)
+lint.extend-select = [
+    "B",  # flake8-bugbear: catches likely bugs and design issues (e.g., using mutable default arguments)
+]
+
+[tool.ruff.lint.flake8-annotations]
+# Enable annotation checks for function arguments and return types
+suppress-dummy-args = true  # Ignore missing type hints for _ variables (common in loops)
+
+[tool.ruff.lint.isort]
+combine-as-imports = true  # Combine 'import x as y' statements if possible
+force-sort-within-sections = true  # Enforce strict sorting even within import sections
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10  # Maximum allowed complexity for functions (10 is a common default)
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"  # Enforce Google-style docstrings (can also use 'numpy' or 'pep257')

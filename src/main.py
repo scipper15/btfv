@@ -10,8 +10,13 @@ logger = logging.getLogger(__name__)
 
 def main() -> None:
     logger.info("Starting application.")
-    scraper = Scraper(settings=settings, logger=logger)
-    scraper.scrape()
+    season = 2015
+    scraper = Scraper(settings=settings, logger=logger, season=season)
+    new_match_reports = scraper.scrape()
+    if new_match_reports:
+        logger.info(f"{len(new_match_reports)} NEW match report(s) found.")
+    else:
+        logger.info("No new match reports found.")
 
 
 if __name__ == "__main__":
