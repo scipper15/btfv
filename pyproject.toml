@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "btfv"
+version = "0.1.0"
+description = ""
+authors = ["Martin-Reinhard Eichhorn <reinhard.eichhorn@gmail.com>"]
+readme = "README.md"
+packages = [{include = "src/scraper"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.6"
+mypy = "^1.11.2"
+pre-commit = "^3.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
