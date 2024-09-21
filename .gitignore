@@ -1,0 +1,6 @@
+# Python specific
+__pycache__/
+*.py[cod]
+
+# IDE sepcific
+.vscode
