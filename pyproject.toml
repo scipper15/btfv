@@ -4,10 +4,11 @@ version = "0.1.0"
 description = ""
 authors = ["Martin-Reinhard Eichhorn <reinhard.eichhorn@gmail.com>"]
 readme = "README.md"
-packages = [{include = "src/scraper"}]
+packages = [{include = "src/scraper"}, {include = "src/shared/config"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
+pydantic-settings = "^2.5.2"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -18,3 +19,7 @@ pre-commit = "^3.8.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.mypy]
+mypy_path="src"
