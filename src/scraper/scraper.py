@@ -1,9 +1,10 @@
 class Scraper:
-    def __init__(self, settings) -> None:
+    def __init__(self, settings, logger) -> None:
         self.settings = settings
-        print(f"Hello from {Scraper.__name__}!")
+        self.logger = logger
+        logger.info(f"Hello from {Scraper.__name__}!")
 
-    def scrape(self):
+    def scrape(self) -> None:
         pass
 
 
