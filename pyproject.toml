@@ -8,13 +8,17 @@ packages = [{include = "src/scraper"}, {include = "src/shared/config"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
+beautifulsoup4 = "^4.12.3"
 pydantic-settings = "^2.5.2"
+requests = "^2.32.3"
 
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.6.6"
 mypy = "^1.11.2"
 pre-commit = "^3.8.0"
+ruff = "^0.6.6"
+types-requests = "^2.32.0.20240914"
+types-beautifulsoup4 = "^4.12.0.20240907"
 
 [build-system]
 requires = ["poetry-core"]

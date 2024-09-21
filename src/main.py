@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 def main() -> None:
     logger.info("Starting application.")
-    scraper = Scraper(settings=settings, logger=logger)
+    season = 3000
+    scraper = Scraper(settings=settings, logger=logger, season=season)
     scraper.scrape()
 
 

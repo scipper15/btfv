@@ -11,6 +11,11 @@ repos:
     rev: v1.10.1
     hooks:
       - id: mypy
+        name: mypy
+        entry: poetry run mypy  # Ensure mypy runs in the poetry environment
+        language: system
+        types: [python]
+        additional_dependencies: []
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.3.0
     hooks:
