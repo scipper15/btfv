@@ -1,8 +1,9 @@
 from scraper.scraper import Scraper
+from shared.config.settings import settings
 
 
 def main():
-    scraper = Scraper()
+    scraper = Scraper(settings=settings)
     scraper.scrape()
 
 
