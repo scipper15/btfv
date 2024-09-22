@@ -27,13 +27,17 @@ class Extractor:
         self.page_id = page_id
         self.html = html
         self.heading1 = self.html.find("h1")
+        logger.info("*" * 30)
+        logger.info(f"Season: {season}, page id: {page_id}")
 
-    def extact_matchreport(self):
+    def extract_matchreport(self):
         metadata = self._extract_matchday_metadata()
         home_players = self._extract_players(home=True)
         away_players = self._extract_players(home=False)
         player_map = self._create_player_map(home_players + away_players)
-        [print(abbr, player) for abbr, player in player_map.items()]
+        self.logger.info("Players on this matchday:")
+        [self.logger.info(f"{abbr}, {player}") for abbr, player in player_map.items()]
+        self._extract_matches()
 
     def _extract_players(self, home: bool) -> list[str]:
         idx = 0 if home else 1
@@ -49,6 +53,41 @@ class Extractor:
             player_abbr = f"{player[:idx]}."
             player_map = player_map | {player_abbr: player}
         return player_map
+
+    def _extract_matches(self) -> list[dict[str, str]]:
+        matches_list: list[dict[str, str]] = []
+        pattern = re.compile(r"(einzel|doppel)")
+        tables = self.html.find_all("table", id=pattern)
+        offset_double = 6
+        offset_single = 4
+        if tables:
+            for idx, table in enumerate(tables):
+                table_id = table["id"]
+                if "doppel" in table_id:
+                    self.logger.debug(f"Processing table id: {table_id}.")
+                    tds = tables[idx].find("tbody").find_all("td")
+                    for step in range(0, len(tds), offset_double):
+                        matches_list.append(
+                            {
+                                "p_home1": tds[0 + step].text.strip(),
+                                "p_away1": tds[2 + step].text.strip(),
+                                "result": tds[3 + step].text.strip(),
+                                "p_home2": tds[4 + step].text.strip(),
+                                "p_away2": tds[5 + step].text.strip(),
+                            }
+                        )
+                elif "einzel" in table_id:
+                    self.logger.debug(f"Processing table id: {table_id}.")
+                    tds = tables[idx].find("tbody").find_all("td")
+                    for step in range(0, len(tds), offset_single):
+                        matches_list.append(
+                            {
+                                "p_home1": tds[0 + step].text.strip(),
+                                "p_away2": tds[2 + step].text.strip(),
+                                "result": tds[3 + step].text.strip(),
+                            }
+                        )
+        return matches_list
 
     def _extract_matchday_metadata(self):
         match_data = {}
