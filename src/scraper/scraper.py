@@ -1,4 +1,5 @@
 from datetime import datetime
+from itertools import chain
 from pathlib import Path
 import re
 import typing
@@ -47,9 +48,9 @@ class Scraper:
         self._season_html = self._get_html(self.season_url)
         self.division_urls = self._get_urls("liga", self._season_html)
 
-        self._logger.info(f"Season: {season}.")
-        self._logger.info(f"Starting url: {self.season_url}")
-        self._logger.info(self.division_urls)
+        self._logger.info(f"Season / year: {season}.")
+        self._logger.info(f"Season starting url: {self.season_url}")
+        self._logger.info(f"Division urls:\n{self.division_urls}")
 
     def _get_id_from_season(self) -> int:
         """Get the page ID for the given season.
@@ -107,7 +108,7 @@ class Scraper:
         Returns:
             BeautifulSoup: Parsed HTML content.
         """
-        self._logger.info(f"Reading HTML from {url}.")
+        self._logger.debug(f"Reading HTML from {url}.")
         r = requests.get(url)
         r.raise_for_status()
         return BeautifulSoup(r.text, "html.parser")
@@ -119,7 +120,7 @@ class Scraper:
             filepath (Path): Path to save the HTML file.
             html (BeautifulSoup): Parsed HTML content to save.
         """
-        self._logger.info(f"Saving HTML to {filepath}.")
+        self._logger.debug(f"Saving HTML to {filepath}.")
         with open(filepath, "w", encoding="utf-8") as file:
             file.write(html.prettify())
 
@@ -136,9 +137,9 @@ class Scraper:
         page_type = self._get_page_type_from_url(url)
         if filepath.exists() and self.season == datetime.now().year:
             if page_type == "liga":
-                self._logger.info(
-                    "Current Season: re-downloading <liga> page_type to \
-                     check for new matchreports."
+                self._logger.debug(
+                    "Current Season: re-downloading <liga> page_type to "
+                    "check for new matchreports."
                 )
                 html = self._retrieve_html_from_server(url=url)
                 self._cache_html_to_file(filepath=filepath, html=html)
@@ -149,9 +150,9 @@ class Scraper:
                 page_id = self._get_page_id_from_url(url=url)
                 self.new_matchreports_html.append((page_id, html))
         else:
+            self._logger.debug(f"Reading HTML from {filepath}.")
             with open(filepath, encoding="utf-8") as file:
                 content = file.read()
-            self._logger.info(f"Reading HTML from {filepath}.")
             html = BeautifulSoup(content, "html.parser")
         return html
 
@@ -196,12 +197,13 @@ class Scraper:
         sorted_by_id = sorted(list({a_tag["href"] for a_tag in a_tags}))  # noqa: C414
         return sorted_by_id
 
-    def scrape(self) -> list[tuple[int, BeautifulSoup]]:
+    def scrape(self) -> dict[int, list[tuple[int, BeautifulSoup]]]:
         """Scrape data for match reports from the website and cache HTML content.
 
         Returns:
-            list[tuple[int, BeautifulSoup]]: List of new match reports' IDs and HTML
-                                             content, sorted by date.
+            dict[int, list[tuple[int, BeautifulSoup]]]:
+                Season dictionary, year as key and a list of new match reports' IDs and
+                HTML content, sorted by date.
         """
         for division_url in self.division_urls:
             division_html = self._get_html(url=division_url)
@@ -214,8 +216,9 @@ class Scraper:
             self.new_matchreports_html,
             key=lambda page_id_html: self._extract_date(page_id_html[1]),
         )
+        new_matchreports = {self.season: new_matchreport_html_sorted_by_id}
 
-        return new_matchreport_html_sorted_by_id
+        return new_matchreports
 
     def _extract_date(self, html) -> datetime:
         """Extract the date from the HTML content.
@@ -235,3 +238,35 @@ class Scraper:
             if date_match:
                 return datetime.strptime(date_match.group(), "%d.%m.%Y")
         raise ValidationError("No 'Date' found in <small> tag.")
+
+
+def initial_scrape(
+    settings: "Settings", logger: "Logger"
+) -> dict[int, list[tuple[int, BeautifulSoup]]] | None:
+    """Convenience function to be used for first scrape run.
+
+    Collects all data from all seasons.
+
+        Example return: {2012: [(page_id, html), (page_id, html)],
+                         2013: [(page_id, html), (page_id, html)]}
+    """
+    seasons_until_covid = range(2012, 2021)
+    seasons_since_covid = range(2022, datetime.now().year + 1)
+    all_seasons_range = chain(seasons_until_covid, seasons_since_covid)
+    all_seasons_matchreport_html: dict[int, list[tuple[int, BeautifulSoup]]] = {}
+    for season in all_seasons_range:
+        scraper = Scraper(settings=settings, logger=logger, season=season)
+        all_seasons_matchreport_html = all_seasons_matchreport_html | scraper.scrape()
+
+    matchreport_count = len(
+        {x for v in all_seasons_matchreport_html.values() for x in v}
+    )
+    if matchreport_count:
+        logger.info(f"{matchreport_count} NEW match report(s) found.")
+        for season, new_match_report in all_seasons_matchreport_html.items():
+            logger.info(f"season: {season}, new matchreports: {len(new_match_report)}")
+    else:
+        logger.info("No new match reports found.")
+        return None
+
+    return all_seasons_matchreport_html
