@@ -1,34 +1,27 @@
-import logging
-from pathlib import Path
-
 from scraper.extractor import Extractor
-from scraper.scraper import initial_scrape
+from scraper.scraper import Scraper
 from shared.config.settings import settings
-from shared.logging.logging import setup_logging
-
-setup_logging()
-logger = logging.getLogger(__name__)
+from shared.logging.logging import extractor_logger, main_logger, scraper_logger
 
 
 def main() -> None:
-    logger.info("Starting application.")
-    Path.unlink(settings.RAW_HTML_PATH / "spielbericht_12.html")
-    new_match_reports = initial_scrape(logger=logger, settings=settings)
-    if new_match_reports:
-        keys = new_match_reports.keys()
-        for key in keys:
-            season = key
-            break
-        page_id = new_match_reports[season][0][0]
-        html = new_match_reports[season][0][1]
-        extractor = Extractor(
-            logger=logger,
-            settings=settings,
-            season=season,
-            page_id=page_id,
-            matchday_data=html,
-        )
-        extractor.extact_matchreport()
+    main_logger.info("Starting application.")
+    scraper = Scraper(
+        logger=scraper_logger,
+        settings=settings,
+        season=2012,
+    )
+    new_match_reports = scraper.scrape()
+    for season, match_tuple_list in new_match_reports.items():
+        for page_id, match_report in match_tuple_list:
+            extractor = Extractor(
+                logger=extractor_logger,
+                settings=settings,
+                season=season,
+                page_id=page_id,
+                html=match_report,
+            )
+            extractor.extract_matchreport()
 
 
 if __name__ == "__main__":
