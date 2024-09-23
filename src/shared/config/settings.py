@@ -10,7 +10,9 @@ class Settings(BaseSettings):
     PYTHONPATH: str = "./src"
 
     APPNAME: str = "btfv.tablesoccer.rocks"
+    LOGGING_ENV: str = Field(default="dev")
 
+    BASE_BATH: Path = Field(default=Path.cwd())
     RAW_HTML_PATH: Path = Field(default=Path.cwd() / "data" / "raw_html")
 
     @field_validator("RAW_HTML_PATH", mode="before")
