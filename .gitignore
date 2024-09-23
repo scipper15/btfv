@@ -11,3 +11,6 @@ __pycache__/
 # Data specific
 data
 *.zip
+
+# Logging files
+*.log
