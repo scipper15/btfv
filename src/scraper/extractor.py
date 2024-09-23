@@ -14,6 +14,22 @@ if typing.TYPE_CHECKING:
 
 
 class Extractor:
+    division_name_sanitizer = MappingProxyType(
+        {
+            "Süd-Ost": "Südost",
+            "Süd-West": "Südwest",
+        }
+    )
+    players_to_remove: typing.ClassVar = [
+        "1, Freilos",
+        "2, Freilos",
+        "3, Freilos",
+        "4, Freilos",
+        "Freilos, 1",
+        "Freilos, 2",
+        "Freilos, 3",
+        "Freilos, 4",
+    ]
     player_name_sanitizer = MappingProxyType(
         {
             "Brosowsky , Felix": "Brosowsky, Felix",
@@ -106,6 +122,16 @@ class Extractor:
                 for player_name in player_names
             ]
 
+    def _sanitize_division_name(self, region: str) -> str:
+        return Extractor.division_name_sanitizer.get(region, region)
+
+    def _sanitize_team_name(self, team_name: str) -> str:
+        team_name = team_name.replace(" e.V.", "")
+        team_name = team_name.replace("1.KSC", "1. KSC")
+        team_name = team_name.replace("TFC-Bamberg", "TFC Bamberg")
+        team_name = team_name.replace("Muenchen", "München")
+        return team_name
+
     def _create_player_map(self, players: list) -> dict[str, str]:
         player_map: dict[str, str] = {}
         for player in players:
@@ -149,8 +175,12 @@ class Extractor:
 
                         # if invalid player name skip the match data
                         opponents_double = (p_home1, p_home2, p_away1, p_away2)
-                        if any(opponents_double) is None:
+                        if (
+                            any(opponents_double) is None
+                            or any(opponents_double) in Extractor.players_to_remove
+                        ):
                             continue
+
                         # sanitize player name abbreviations
                         (
                             p_home1,
@@ -220,6 +250,7 @@ class Extractor:
     def _extract_matchday_metadata(self):
         match_data = {}
         division_name, division_region = self._extract_match_division()
+        division_region = self._sanitize_division_name(division_region)
         possible_divisions = {
             "Landesliga": 1,
             "Verbandsliga": 2,
@@ -235,6 +266,10 @@ class Extractor:
         matchdate = self._extract_match_date()
         self.logger.info(f"Match date: {matchdate}")
         home_team, away_team = self._extract_team_names()
+        home_team, away_team = (
+            self._sanitize_team_name(home_team),
+            self._sanitize_team_name(away_team),
+        )
         self.logger.info(f"Team names: {home_team}, {away_team}")
         match_data["meta"] = {
             "division_name": division_name,
