@@ -13,6 +13,18 @@ loggers:
     level: DEBUG
     handlers: [console]
     propagate: False
+  filehandler:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  populator:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  scrapingmanager:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
   scraper:
     level: DEBUG
     handlers: [console]

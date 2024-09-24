@@ -24,12 +24,15 @@ def setup_logging(default_level=logging.INFO):
     else:
         logging.basicConfig(level=default_level)
         logging.warning(
-            f"Logging configuration file for {env} not found, using basic config"
+            f"Logging configuration file for {env} not found, using basic config."
         )
 
 
 setup_logging()
 
 main_logger = logging.getLogger("main")
+file_handler_logger = logging.getLogger("filehandler")
 scraper_logger = logging.getLogger("scraper")
 extractor_logger = logging.getLogger("extractor")
+populator_logger = logging.getLogger("populator")
+scraping_manager_logger = logging.getLogger("scrapingmanager")

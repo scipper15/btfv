@@ -1,16 +1,13 @@
 from datetime import datetime
+from logging import Logger
 import re
 from types import MappingProxyType
 import typing
 
 from bs4 import BeautifulSoup
 
-from scraper.custom_errors import ElementNotFound
-
-if typing.TYPE_CHECKING:
-    from logging import Logger
-
-    from shared.config.settings import Settings
+from scraper.custom_errors import ElementNotFound, ValidationError
+from shared.config.settings import Settings
 
 
 class Extractor:
@@ -77,40 +74,63 @@ class Extractor:
 
     def __init__(
         self,
-        settings: "Settings",
         logger: "Logger",
-        season: int,
-        page_id: int,
-        html: BeautifulSoup,
+        settings: "Settings",
     ) -> None:
-        self.settings = settings
-        self.logger = logger
+        self._logger = logger
+        self._settings = settings
+
+    def extract_date(self, html) -> datetime:
+        small = html.find("small").text.strip()
+        if small:
+            date_match = re.search(r"\d{2}.\d{2}.\d{4}", small)
+            if date_match:
+                return datetime.strptime(date_match.group(), "%d.%m.%Y")
+        raise ValidationError("No 'Date' found in <small> tag.")
+
+    def extract_urls(self, page_type: str, html: BeautifulSoup) -> list[str]:
+        pattern = re.compile(
+            re.escape(f"{self._settings.BTFV_URL_BASE}/{page_type}/anzeigen/")
+        )
+        a_tags = html.find_all("a", href=re.compile(pattern))
+        # Using a set() to remove possible duplicates
+        sorted_by_id = sorted(list({a_tag["href"] for a_tag in a_tags}))  # noqa: C414
+        return sorted_by_id
+
+    def extract_page_type_from_url(self, url: str) -> str:
+        return url.split("/")[4]
+
+    def extract_page_id_from_url(self, url: str) -> int:
+        return int(url.split("/")[-2])
+
+    def extract_data(self, season: int, page_id: int, html: BeautifulSoup):
         self.season = season
         self.page_id = page_id
         self.html = html
         self.heading1 = self.html.find("h1")
-        logger.info("Next matchday...")
-        logger.info(f"Season: {season}, page id: {page_id}")
-
-    def extract_matchreport(self):
         self.metadata = self._extract_matchday_metadata()
-        home_players = self._extract_players(home=True)
-        away_players = self._extract_players(home=False)
-        player_map = self._create_player_map(home_players + away_players)
-        self.logger.info("Players on this matchday:")
-        [self.logger.info(f"{abbr}, {player}") for abbr, player in player_map.items()]
-        self.matches = self._extract_matches(player_map)
-        self.logger.info(f"{len(self.matches)} matches found.")
+        self.home_players = Extractor.extract_players(html=self.html, home=True)
+        self.away_players = Extractor.extract_players(html=self.html, home=False)
+        self.player_map = self._create_player_map(self.home_players + self.away_players)
+        self._logger.debug("Players on this matchday:")
+        [
+            self._logger.debug(f"{abbr}, {player}")  # type: ignore
+            for abbr, player in self.player_map.items()
+        ]
+        self.matches = self._extract_matches(self.player_map)
+        self._logger.info(f"{len(self.matches)} matches found.")
 
-    def _extract_players(self, home: bool) -> list[str]:
+    @staticmethod
+    def extract_players(html: BeautifulSoup, home: bool) -> list[str]:
         idx = 0 if home else 1
-        tables = self.html.find_all("table")
+        tables = html.find_all("table")
         rows = tables[idx].find("tbody").find_all("tr")
         player_names = [row.find_all("td")[1].get_text(strip=True) for row in rows]
-        player_names = self._sanitize_player_names(player_names=player_names)
+        player_names = Extractor._sanitize_player_names(player_names=player_names)
         return player_names
 
-    def _sanitize_player_names(self, player_names: list | tuple) -> list[str]:
+    @staticmethod
+    def _sanitize_player_names(player_names: list | tuple) -> list[str]:
         if isinstance(player_names, list):
             return [
                 Extractor.player_name_sanitizer.get(player_name, player_name)
@@ -135,12 +155,12 @@ class Extractor:
     def _create_player_map(self, players: list) -> dict[str, str]:
         player_map: dict[str, str] = {}
         for player in players:
-            # abbreveate player name
+            # abbreviate player name
             idx = player.find(",") + 3
             if idx:
                 player_abbr = f"{player[:idx]}."
                 if player_map.get(player_abbr, False):
-                    self.logger.warning(
+                    self._logger.warning(
                         f"Ambiguity found: {player_abbr} -> {player} "
                         f"already exists as: {player_map.get(player_abbr)} "
                         f"found at {self.page_id}"
@@ -162,7 +182,7 @@ class Extractor:
         if tables:
             for idx, table in enumerate(tables):
                 table_id = table["id"]
-                self.logger.debug(f"Processing table id: {table_id}.")
+                self._logger.debug(f"Processing table id: {table_id}.")
                 if "doppel" in table_id:
                     tds = tables[idx].find("tbody").find_all("td")
                     for step in range(0, len(tds), offset_double):
@@ -187,7 +207,7 @@ class Extractor:
                             p_home2,
                             p_away1,
                             p_away2,
-                        ) = self._sanitize_player_names(opponents_double)
+                        ) = Extractor._sanitize_player_names(opponents_double)
 
                         result = tds[3 + step].text.strip()
                         sets_home, sets_away, who_won = self._check_who_won(result)
@@ -220,7 +240,9 @@ class Extractor:
                         if any(opponents_single) is None:
                             continue
                         # sanitize player name abbreviations
-                        p_home1, p_away1 = self._sanitize_player_names(opponents_single)
+                        p_home1, p_away1 = Extractor._sanitize_player_names(
+                            opponents_single
+                        )
 
                         sets_home, sets_away, who_won = self._check_who_won(result)
 
@@ -258,19 +280,19 @@ class Extractor:
             "Kreisliga": 4,
         }
         division_hierarchy = possible_divisions[division_name]
-        self.logger.info(
-            f"Division name: {division_name}, Region: {division_region}, Hierarchy: {division_hierarchy}"  # noqa
+        self._logger.info(
+            f"Division name: {division_name}, Region: {division_region}, Hierarchy: {division_hierarchy}"  # noqa 501
         )
         matchday = self._extract_match_day()
-        self.logger.info(f"match day: {matchday}")
+        self._logger.info(f"match day: {matchday}")
         matchdate = self._extract_match_date()
-        self.logger.info(f"Match date: {matchdate}")
+        self._logger.info(f"Match date: {matchdate}")
         home_team, away_team = self._extract_team_names()
         home_team, away_team = (
             self._sanitize_team_name(home_team),
             self._sanitize_team_name(away_team),
         )
-        self.logger.info(f"Team names: {home_team}, {away_team}")
+        self._logger.info(f"Team names: {home_team}, {away_team}")
         match_data["meta"] = {
             "division_name": division_name,
             "division_region": division_region,
