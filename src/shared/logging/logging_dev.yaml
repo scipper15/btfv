@@ -1,0 +1,38 @@
+version: 1
+disable_existing_loggers: False
+formatters:
+  detailed:
+    format: "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: detailed
+    level: DEBUG
+loggers:
+  main:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  filehandler:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  populator:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  scrapingmanager:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  scraper:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  extractor:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+root:
+  level: DEBUG
+  handlers: [console]

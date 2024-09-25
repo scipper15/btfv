@@ -10,8 +10,13 @@ class Settings(BaseSettings):
     PYTHONPATH: str = "./src"
 
     APPNAME: str = "btfv.tablesoccer.rocks"
+    LOGGING_ENV: str = Field(default="dev")
 
+    BASE_PATH: Path = Field(default=Path.cwd())
     RAW_HTML_PATH: Path = Field(default=Path.cwd() / "data" / "raw_html")
+    PLAYER_HTML_PATH: Path = Field(default=Path.cwd() / "data" / "player_html")
+
+    BTFV_URL_BASE: str = "https://btfv.de/sportdirector"
 
     @field_validator("RAW_HTML_PATH", mode="before")
     def convert_raw_html_path(cls, RAW_HTML_PATH):
@@ -21,6 +26,15 @@ class Settings(BaseSettings):
             return RAW_HTML_PATH
         Path.mkdir(RAW_HTML_PATH, exist_ok=True, parents=True)
         return RAW_HTML_PATH
+
+    @field_validator("PLAYER_HTML_PATH", mode="before")
+    def convert_player_html_path(cls, PLAYER_HTML_PATH):
+        if isinstance(PLAYER_HTML_PATH, str):
+            PLAYER_HTML_PATH = Path.cwd() / PLAYER_HTML_PATH
+            Path.mkdir(PLAYER_HTML_PATH, exist_ok=True, parents=True)
+            return PLAYER_HTML_PATH
+        Path.mkdir(PLAYER_HTML_PATH, exist_ok=True, parents=True)
+        return PLAYER_HTML_PATH
 
 
 settings = Settings()

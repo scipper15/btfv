@@ -1,0 +1,26 @@
+version: 1
+disable_existing_loggers: False
+formatters:
+  simple:
+    format: '%(levelname)s - %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: simple
+    level: INFO
+loggers:
+  main:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  scraper:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  extractor:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+root:
+  level: INFO
+  handlers: [console]

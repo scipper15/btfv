@@ -1,16 +1,10 @@
-import logging
-
-from scraper.scraper import initial_scrape
-from shared.config.settings import settings
-from shared.logging.logging import setup_logging
-
-setup_logging()
-logger = logging.getLogger(__name__)
+import scraper_main
+from shared.logging.logging import main_logger
 
 
 def main() -> None:
-    logger.info("Starting application.")
-    new_match_reports = initial_scrape(logger=logger, settings=settings)
+    main_logger.info("Starting application.")
+    scraper_main.main()
 
 
 if __name__ == "__main__":

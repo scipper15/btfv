@@ -47,7 +47,24 @@ jobs:
             ;;
         esac
 
-    - name: Create GitHub Issue
+    - name: Check if Issue Already Exists
+      id: check-issue
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        branch_name="${GITHUB_REF#refs/heads/}"
+        # Query GitHub API to search for issues with the branch name in the title
+        existing_issues=$(curl -s -H "Authorization: token $GH_TOKEN" \
+        "https://api.github.com/repos/${{ github.repository }}/issues?state=open&labels=${{ steps.determine-label.outputs.label }}")
+
+        # Check if the issue already exists by looking for a matching branch name in the title
+        issue_exists=$(echo "$existing_issues" | jq --arg branch "$branch_name" '[.[] | select(.title | contains($branch))] | length')
+
+        echo "Issues found: $issue_exists"
+        echo "::set-output name=issue_exists::$issue_exists"
+
+    - name: Create GitHub Issue if not exists
+      if: steps.check-issue.outputs.issue_exists == '0'
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
