@@ -6,7 +6,7 @@ import typing
 
 from bs4 import BeautifulSoup
 
-from scraper.custom_errors import ElementNotFound, ValidationError
+from scraper.custom_errors import ElementNotFound
 from shared.config.settings import Settings
 
 
@@ -86,7 +86,7 @@ class Extractor:
             date_match = re.search(r"\d{2}.\d{2}.\d{4}", small)
             if date_match:
                 return datetime.strptime(date_match.group(), "%d.%m.%Y")
-        raise ValidationError("No 'Date' found in <small> tag.")
+        raise ElementNotFound("No 'Date' found in <small> tag.")
 
     def extract_urls(self, page_type: str, html: BeautifulSoup) -> list[str]:
         pattern = re.compile(
