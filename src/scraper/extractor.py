@@ -280,19 +280,13 @@ class Extractor:
             "Kreisliga": 4,
         }
         division_hierarchy = possible_divisions[division_name]
-        self._logger.info(
-            f"Division name: {division_name}, Region: {division_region}, Hierarchy: {division_hierarchy}"  # noqa 501
-        )
         matchday = self._extract_match_day()
-        self._logger.info(f"match day: {matchday}")
         matchdate = self._extract_match_date()
-        self._logger.info(f"Match date: {matchdate}")
         home_team, away_team = self._extract_team_names()
         home_team, away_team = (
             self._sanitize_team_name(home_team),
             self._sanitize_team_name(away_team),
         )
-        self._logger.info(f"Team names: {home_team}, {away_team}")
         match_data["meta"] = {
             "division_name": division_name,
             "division_region": division_region,
@@ -302,6 +296,8 @@ class Extractor:
             "home_team": home_team,
             "away_team": away_team,
         }
+        for key, value in match_data["meta"].items():
+            self._logger.info(f"{key}: {value}")
         return match_data
 
     def _extract_match_division(self) -> tuple[str, str]:
