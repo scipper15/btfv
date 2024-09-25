@@ -27,14 +27,17 @@ class Settings(BaseSettings):
         Path.mkdir(RAW_HTML_PATH, exist_ok=True, parents=True)
         return RAW_HTML_PATH
 
-    @field_validator("PLAYER_HTML_PATH", mode="before")
-    def convert_player_html_path(cls, PLAYER_HTML_PATH):
-        if isinstance(PLAYER_HTML_PATH, str):
-            PLAYER_HTML_PATH = Path.cwd() / PLAYER_HTML_PATH
-            Path.mkdir(PLAYER_HTML_PATH, exist_ok=True, parents=True)
-            return PLAYER_HTML_PATH
-        Path.mkdir(PLAYER_HTML_PATH, exist_ok=True, parents=True)
-        return PLAYER_HTML_PATH
+    @field_validator("RAW_HTML_PATH", "PLAYER_HTML_PATH", mode="before")
+    def convert_paths(cls, path_value):
+        """Convert string paths to Path objects.
+
+        Creates the directories if they don't exist.
+        """
+        if isinstance(path_value, str):
+            path_value = Path.cwd() / path_value
+
+        Path.mkdir(path_value, exist_ok=True, parents=True)
+        return path_value
 
 
 settings = Settings()
