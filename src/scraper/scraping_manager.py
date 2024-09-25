@@ -4,7 +4,7 @@ from logging import Logger
 from bs4 import BeautifulSoup
 
 from scraper.extractor import Extractor
-from scraper.scraper import Scraper
+from scraper.scraper import PlayerScraper, Scraper
 from shared.config.settings import Settings
 
 
@@ -14,11 +14,13 @@ class ScrapingManager:
         logger: Logger,
         settings: Settings,
         scraper: Scraper,
+        player_scraper: PlayerScraper,
         extractor: Extractor,
     ) -> None:
         self.logger = logger
         self.settings = settings
         self.scraper = scraper
+        self.player_scraper = player_scraper
         self.extractor = extractor
         self._generate_starting_url()
 
@@ -28,13 +30,15 @@ class ScrapingManager:
             for page_id in range(12, datetime.now().year - 2000)
         ]
 
-    def _get_season_from_season_page_id(self, page_id: int):
+    def _get_season_from_season_page_id(self, page_id: int) -> int:
         if 12 <= page_id <= 20:
             return 2000 + page_id
         else:
             return 2000 + page_id + 1
 
-    def _process_match_reports(self, season: int, division_url: str):
+    def _process_match_reports(
+        self, season: int, division_url: str
+    ) -> list[tuple[int, BeautifulSoup]]:
         """Fetches and processes match reports for a given division."""
         html = self.scraper.get_HTML(season, division_url)
         if not html:
@@ -56,7 +60,9 @@ class ScrapingManager:
 
         return match_report_data
 
-    def _process_divisions(self, season: int, season_html: BeautifulSoup):
+    def _process_divisions(
+        self, season: int, season_html: BeautifulSoup
+    ) -> list[tuple[int, BeautifulSoup]]:
         """Fetches and processes divisions for a given season."""
         division_urls = self.extractor.extract_urls(page_type="liga", html=season_html)
         all_match_reports = []
@@ -65,14 +71,17 @@ class ScrapingManager:
             all_match_reports.extend(match_reports)
         return all_match_reports
 
-    def _sort_match_reports(self, match_report_data: list[tuple[int, str]]):
+    def _sort_match_reports(
+        self, match_report_data: list[tuple[int, BeautifulSoup]]
+    ) -> list[tuple[int, BeautifulSoup]]:
         """Sort match reports by date extracted from HTML."""
         return sorted(
             match_report_data,
             key=lambda id_html: self.extractor.extract_date(id_html[1]),
         )
 
-    def process_seasons(self):
+    def process_seasons(self) -> None:
+        """Process all seasons."""
         new_match_report_data_by_season = {}
 
         for season_url in self._generate_starting_url():
@@ -96,10 +105,14 @@ class ScrapingManager:
 
         self._log_and_extract_data(new_match_report_data_by_season)
 
+    def process_season(self, season: int) -> None:
+        """Convenience function: Process one season."""
+        pass
+
     def _log_and_extract_data(
         self,
         new_match_report_data_by_season: dict[int, list[tuple[int, BeautifulSoup]]],
-    ):
+    ) -> None:
         """Logs and extracts data from new match reports."""
         match_report_count = len(
             {x for v in new_match_report_data_by_season.values() for x in v}

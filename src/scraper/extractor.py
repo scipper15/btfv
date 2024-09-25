@@ -337,3 +337,44 @@ class Extractor:
             away_team = h2[2].text.strip()
             return (home_team, away_team)
         raise ElementNotFound("No team names found in <h1>-tag.")
+
+    def _extract_DTFB_player_information(
+        self, player_html: BeautifulSoup, player_name: str
+    ) -> dict[str, str | None]:
+        tables = player_html.find_all("table")
+
+        player_table = tables[4].find_all(
+            "tr"
+        )  # this table contains player information
+
+        player_info = {
+            "player_name": player_name,
+            "category": None,
+            "organisation": "Bayerischer Tischfußballverband BTFV",  # Always the same
+            "national_id": None,
+            "international_id": None,
+            "license": None,
+        }
+
+        row_to_key_mapping = {
+            "Kategorie:": "category",
+            "Nationale Spielernr.:": "national_id",
+            "Internationale Spielernr.:": "international_id",
+            "Lizenz:": "license",
+        }
+
+        # Iterate through each row and extract the relevant information
+        for row in player_table:
+            cols = row.find_all("td")
+            if len(cols) == 2:
+                label = cols[0].get_text(strip=True)
+                value = cols[1].get_text(strip=True)
+
+                # Check if the label corresponds to a key in the player_info dictionary
+                if label in row_to_key_mapping:
+                    player_info[row_to_key_mapping[label]] = value
+        self._logger.debug("Player Information from DTFB:")
+        for key, value in player_info.items():
+            self._logger.info(f"{key}: {value}")
+
+        return player_info
