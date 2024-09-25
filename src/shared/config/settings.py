@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = Field(default="docker")
     POSTGRES_DB: str = Field(default="db")
     SYNC_URL: str = Field(
-        default="postgresql+psycopg2-binary://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
+        default="postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
     )
     ASYNC_URL: str = Field(
         default="postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
