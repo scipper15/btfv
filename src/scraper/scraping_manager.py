@@ -3,9 +3,11 @@ from logging import Logger
 
 from bs4 import BeautifulSoup
 
+from scraper.db_populator import DbPopulator
 from scraper.extractor import Extractor
 from scraper.scraper import PlayerScraper, Scraper
 from shared.config.settings import Settings
+from shared.database.database import Database
 
 
 class ScrapingManager:
@@ -16,12 +18,16 @@ class ScrapingManager:
         scraper: Scraper,
         player_scraper: PlayerScraper,
         extractor: Extractor,
+        db_populator: DbPopulator,
+        database: Database,
     ) -> None:
         self.logger = logger
         self.settings = settings
         self.scraper = scraper
         self.player_scraper = player_scraper
         self.extractor = extractor
+        self.db_populator = db_populator
+        self.database = database
         self._generate_starting_url()
 
     def _generate_starting_url(self) -> list[str]:
@@ -107,6 +113,9 @@ class ScrapingManager:
 
     def process_season(self, season: int) -> None:
         """Convenience function: Process one season."""
+        pass
+
+    def populate_db(self) -> None:
         pass
 
     def _log_and_extract_data(
