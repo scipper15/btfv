@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     PLAYER_HTML_PATH: Path = Field(default=Path.cwd() / "data" / "player_html")
 
     BTFV_URL_BASE: str = "https://btfv.de/sportdirector"
+    DTFB_URL_BASE: str = "https://dtfb.de/wettbewerbe/turnierserie/spielersuche"
 
     @field_validator("RAW_HTML_PATH", mode="before")
     def convert_raw_html_path(cls, RAW_HTML_PATH):

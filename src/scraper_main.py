@@ -1,6 +1,6 @@
 from scraper.extractor import Extractor
 from scraper.file_handler import FileHandler
-from scraper.scraper import Scraper
+from scraper.scraper import PlayerScraper, Scraper
 from scraper.scraping_manager import ScrapingManager
 from shared.config.settings import settings
 from shared.logging.logging import (
@@ -17,10 +17,16 @@ def main() -> None:
     scraper = Scraper(
         logger=scraper_logger, file_handler=file_handler, extractor=extractor
     )
+    player_scraper = PlayerScraper(
+        logger=scraper_logger,
+        settings=settings,
+        file_handler=file_handler,
+    )
     scraping_manager = ScrapingManager(
         logger=scraping_manager_logger,
         settings=settings,
         scraper=scraper,
+        player_scraper=player_scraper,
         extractor=extractor,
     )
     scraping_manager.process_seasons()

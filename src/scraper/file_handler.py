@@ -1,3 +1,4 @@
+import hashlib
 from logging import Logger
 from pathlib import Path
 
@@ -26,6 +27,20 @@ class FileHandler:
         page_id = URL.split("/")[-2]
         page_type = URL.split("/")[4]
         return self._settings.RAW_HTML_PATH / f"{page_type}_{page_id}.html"
+
+    def generate_path_for_player(self, player_name: str) -> Path:
+        # Normalize player name by stripping extra spaces and converting to lowercase
+        normalized_name = player_name.strip().lower()
+
+        hash_object = hashlib.sha256(normalized_name.encode())
+        player_hash = hash_object.hexdigest()
+
+        # Using first 8 characters of hash
+        directory_path = Path(
+            f"{self._settings.PLAYER_HTML_PATH}/{player_hash[:8]}.html"
+        )
+
+        return directory_path
 
     def exists(self, path: Path) -> bool:
         return True if path.exists() else False
