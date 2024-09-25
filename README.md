@@ -109,3 +109,9 @@ Scraping of the full dataset takes pretty long. We don't want to strain the serv
 [Download matchreports](https://drive.google.com/drive/folders/1M2-xkV0-wgnaMoJMP4Jg6XpfW_kAsMQp?usp=sharing).
 
 Extract them in project folder to be recognized by the scraper.
+
+## Using Docker
+
+To start the docker services (including for instance the database) run: ´docker compose --profile dev --env-file .env.dev up --build´ explicitely specifying ´.env´ file to be used. Some services won't be started in production environment if using the docker ´prod´ profile, for instance ´adminer´.
+
+To stop docker services run ´docker compose down´. In development you can ´docker compose down -v´ if you want to reinitialize all mounted volumes.
