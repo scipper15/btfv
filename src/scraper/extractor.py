@@ -11,6 +11,35 @@ from shared.config.settings import Settings
 
 
 class Extractor:
+    keyword_to_association = MappingProxyType(
+        {
+            "Aichach": "Speed Ball Team Aichach",
+            "Allgäu": "TFC Allgäu",
+            "Allgäukickers": "Allgäukickers",
+            "Aschbach": "FK Aschbach",
+            "Augsburg": "Soccer Connection Augsburg",
+            "Bamberg": "TFC Bamberg",
+            "Forchheim": "TFC Forchheim",
+            "Ingolstadt": "ESV Ingolstadt Ringsee e.V.",
+            "KC München": "KC München",
+            "Kulmbach": "1. KSC Kulmbach e.V.",
+            "Landau": "KC Landau",
+            "Mainklein": "MK Mainklein",
+            "Maisach": "TSG Maisach",
+            "Mellrichstadt e.V.": "GEKA Mellrichstadt e.V",
+            "Münchberg": "TFC Münchberg",
+            "München": "TFV München",
+            "Nurn": "KC Nurn",
+            "Nürnberg": "TFC Nürnberg",
+            "Passau": "DFST Passau",
+            "Rettenbach": "TFC Old Stars Rettenbach",
+            "Vilsbiburg": "Soccer Team Vilsbiburg",
+            "Volkach": "Kurbelfreunde Volkach",
+            "Vorderbreitenthann": "KDC Vorderbreitenthann e.V.",
+            "Weiden": "DJK Weiden e.V.",
+            "Würzburg": "Kurbelgemeinde Würzburg e. V.",
+        }
+    )
     division_name_sanitizer = MappingProxyType(
         {
             "Süd-Ost": "Südost",
@@ -108,15 +137,15 @@ class Extractor:
         self.page_id = page_id
         self.html = html
         self.heading1 = self.html.find("h1")
-        self.metadata = self._extract_matchday_metadata()
+        self.meta = self._extract_matchday_metadata()
         self.home_players = Extractor.extract_players(html=self.html, home=True)
         self.away_players = Extractor.extract_players(html=self.html, home=False)
         self.player_map = self._create_player_map(self.home_players + self.away_players)
         self._logger.debug("Players on this matchday:")
-        [
-            self._logger.debug(f"{abbr}, {player}")  # type: ignore
-            for abbr, player in self.player_map.items()
-        ]
+
+        for abbr, player in self.player_map.items():
+            self._logger.debug(f"{abbr}, {player}")
+
         self.matches = self._extract_matches(self.player_map)
         self._logger.info(f"{len(self.matches)} matches found.")
 
@@ -171,8 +200,8 @@ class Extractor:
             player_map = player_map | {player_abbr: player}
         return player_map
 
-    def _extract_matches(self, player_map) -> list[dict[str, str]]:
-        matches_list: list[dict[str, str]] = []
+    def _extract_matches(self, player_map) -> list[dict[str, str | int]]:
+        matches_list: list[dict[str, str | int]] = []
         pattern = re.compile(r"(einzel|doppel)")
         tables = self.html.find_all("table", id=pattern)
         offset_double = 6
@@ -214,7 +243,7 @@ class Extractor:
 
                         matches_list.append(
                             {
-                                "match_number": str(match_number),
+                                "match_number": match_number,
                                 "match_type": "double",
                                 "who_won": who_won,
                                 "p_home1": p_home1,
@@ -248,7 +277,7 @@ class Extractor:
 
                         matches_list.append(
                             {
-                                "match_number": str(match_number),
+                                "match_number": match_number,
                                 "match_type": "single",
                                 "who_won": who_won,
                                 "p_home1": p_home1,
@@ -270,7 +299,6 @@ class Extractor:
         return sets_home, sets_away, who_won
 
     def _extract_matchday_metadata(self):
-        match_data = {}
         division_name, division_region = self._extract_match_division()
         division_region = self._sanitize_division_name(division_region)
         possible_divisions = {
@@ -287,7 +315,9 @@ class Extractor:
             self._sanitize_team_name(home_team),
             self._sanitize_team_name(away_team),
         )
-        match_data["meta"] = {
+        association_home_team = self._infer_association(home_team)
+        association_away_team = self._infer_association(away_team)
+        meta = {
             "division_name": division_name,
             "division_region": division_region,
             "division_hierarchy": division_hierarchy,
@@ -295,10 +325,10 @@ class Extractor:
             "matchdate": matchdate,
             "home_team": home_team,
             "away_team": away_team,
+            "association_home_team": association_home_team,
+            "association_away_team": association_away_team,
         }
-        for key, value in match_data["meta"].items():
-            self._logger.info(f"{key}: {value}")
-        return match_data
+        return meta
 
     def _extract_match_division(self) -> tuple[str, str]:
         if self.heading1:
@@ -378,3 +408,23 @@ class Extractor:
             self._logger.info(f"{key}: {value}")
 
         return player_info
+
+    def _infer_association(self, team_name: str) -> str:
+        """Infers the association name from a team name mapping.
+
+        Parameters:
+            team_name (str): The name of the team to infer the association for.
+            keyword_to_association (Dict[str, str]): A mapping of keywords to
+                                                     association names.
+
+        Returns:
+            Optional[str]: The name of the inferred association, or None if
+                           no match is found.
+        """
+        team_name_lower = team_name.lower()
+
+        for keyword, association in Extractor.keyword_to_association.items():
+            if keyword.lower() in team_name_lower:
+                return association
+        # if not mapped use team_name for association name
+        return team_name
