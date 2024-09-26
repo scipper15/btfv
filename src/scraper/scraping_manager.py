@@ -115,8 +115,9 @@ class ScrapingManager:
         """Convenience function: Process one season."""
         pass
 
-    def populate_db(self) -> None:
-        pass
+    def populate_db(self, html: BeautifulSoup, season: int, page_id: int) -> None:
+        self.database.init_db()
+        self.db_populator.populate(html=html, season_year=season, page_id=page_id)
 
     def _log_and_extract_data(
         self,
