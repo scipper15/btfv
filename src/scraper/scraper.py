@@ -1,5 +1,6 @@
 from datetime import datetime
 from logging import Logger
+from typing import cast
 
 from bs4 import BeautifulSoup
 import requests
@@ -90,7 +91,7 @@ class PlayerScraper:
                 return None
 
             # Extract the relevant part of the URL
-            player_detail_url: str = player_detail_link["href"]  # type: ignore
+            player_detail_url: str = cast(str, player_detail_link["href"])  # type: ignore
             parts = player_detail_url.split("&")
             full_player_url = f"https://dtfb.de{parts[0]}&{parts[1]}"
             print(f"Player details URL: {full_player_url}")
