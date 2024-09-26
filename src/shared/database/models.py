@@ -61,6 +61,67 @@ class BaseModel(MappedAsDataclass, DeclarativeBase):
     )
 
 
+class Organisation(BaseModel):
+    """Represents an overarching organisation in the foosball hierarchy."""
+
+    __tablename__ = "organisations"
+
+    name: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+        index=True,
+        default="Deutscher Tischfußballbund e.V.",
+    )
+    acronym: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+        index=True,
+        default="DTFB",
+    )
+
+    # Relationships
+    associations: Mapped[List["Association"]] = relationship(
+        "Association",
+        back_populates="organisation",
+        cascade="all, delete-orphan",
+        init=False,
+    )
+
+
+class Association(BaseModel):
+    """Represents an association that belongs to an organisation."""
+
+    __tablename__ = "associations"
+
+    organisation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("organisations.id"), nullable=False, index=True
+    )
+    acronym: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+        index=True,
+        default="BTFV",
+    )
+    name: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        nullable=False,
+        index=True,
+        default="Bayerischer Tischfußballverband e.V.",
+    )
+
+    # Relationships
+    organisation: Mapped["Organisation"] = relationship(
+        "Organisation", back_populates="associations", init=False
+    )
+    teams: Mapped[List["Team"]] = relationship(
+        "Team", back_populates="association", init=False
+    )
+
+
 class TeamMembership(BaseModel):
     """Association table linking Players to Teams for specific Seasons."""
 
@@ -105,16 +166,6 @@ class Player(BaseModel):
     international_id: Mapped[Optional[str]] = mapped_column(
         String, unique=True, nullable=True, index=True, init=False
     )
-    organisation: Mapped[str] = mapped_column(  # always the same: BTFV
-        String,
-        nullable=False,
-        index=True,
-        init=False,
-        default="Bayerischer Tischfußballverband e.V.",
-    )
-    association: Mapped[str] = mapped_column(
-        String, unique=True, nullable=True, index=True, init=False
-    )
 
     # Relationships
     team_memberships: Mapped[List["TeamMembership"]] = relationship(
@@ -143,8 +194,17 @@ class Team(BaseModel):
     division_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("divisions.id"), nullable=False, index=True
     )
+    association_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("associations.id"), nullable=False, index=True
+    )
 
     # Relationships
+    association: Mapped["Association"] = relationship(
+        "Association", back_populates="teams", init=False
+    )
+    division: Mapped["Division"] = relationship(
+        "Division", back_populates="teams", init=False
+    )
     team_memberships: Mapped[List["TeamMembership"]] = relationship(
         "TeamMembership",
         back_populates="team",
@@ -162,10 +222,6 @@ class Team(BaseModel):
         back_populates="away_team",
         foreign_keys="Match.away_team_id",
         init=False,
-    )
-    # Define relationship back to Division
-    division: Mapped["Division"] = relationship(
-        "Division", back_populates="teams", init=False
     )
 
 

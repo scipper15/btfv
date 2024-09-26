@@ -10,10 +10,12 @@ from scraper.skill_calc import SkillCalc
 from shared.config.settings import Settings
 from shared.database.database import Database
 from shared.database.models import (
+    Association,
     Division,
     DivisionName,
     Match,
     MatchParticipant,
+    Organisation,
     Player,
     Season,
     Team,
@@ -56,13 +58,31 @@ class DbPopulator:
                 self._extractor.meta["division_region"],
                 season,
             )
+
+            # Create or get organisation
+            self._logger.debug("Creating organisation.")
+            organisation = self._get_or_create_organisation(
+                session,
+                name="Deutscher Tischfußballbund e.V.",
+                acronym="DTFB",
+            )
+
+            # Create or get association
+            self._logger.debug("Creating association.")
+            association = self._get_or_create_association(
+                session,
+                name="Bayerischer Tischfußballverband e.V.",
+                acronym="BTFV",
+                organisation=organisation,
+            )
+
             # Create or get teams
             self._logger.debug("Creating teams.")
             home_team = self._get_or_create_team(
-                session, self._extractor.meta["home_team"], division
+                session, self._extractor.meta["home_team"], division, association
             )
             away_team = self._get_or_create_team(
-                session, self._extractor.meta["away_team"], division
+                session, self._extractor.meta["away_team"], division, association
             )
 
             # Process matches and players
@@ -125,11 +145,14 @@ class DbPopulator:
         session: Session,
         team_name: str,
         division: Division,
+        association: Association,
     ) -> Team:
         """Retrieve or create a new Team."""
         team = session.query(Team).filter_by(name=team_name).first()
         if not team:
-            team = Team(name=team_name, division_id=division.id)
+            team = Team(
+                name=team_name, division_id=division.id, association_id=association.id
+            )
             session.add(team)
             session.flush()
         return team
@@ -272,9 +295,12 @@ class DbPopulator:
                 win_probability = self.skill_calc.win_probability(team1, team2)
 
                 # Rate teams based on match outcome
-                (h1_after, h2_after), (
-                    a1_after,
-                    a2_after,
+                (
+                    (h1_after, h2_after),
+                    (
+                        a1_after,
+                        a2_after,
+                    ),
                 ) = self.skill_calc.rate_double_match(
                     team1,
                     team2,
@@ -408,6 +434,35 @@ class DbPopulator:
             )
             session.add(match_participant_home2)
             session.add(match_participant_away2)
+
+    def _get_or_create_organisation(
+        self, session: Session, name: str, acronym: str
+    ) -> Organisation:
+        """Retrieve or create a new Organisation."""
+        organisation = session.query(Organisation).filter_by(name=name).first()
+        if not organisation:
+            organisation = Organisation(name=name, acronym=acronym)
+            session.add(organisation)
+            session.flush()
+            self._logger.info(f"Created organisation: {name} ({acronym})")
+        return organisation
+
+    def _get_or_create_association(
+        self, session: Session, name: str, acronym: str, organisation: Organisation
+    ) -> Association:
+        """Retrieve or create a new Association."""
+        association = session.query(Association).filter_by(name=name).first()
+        if not association:
+            association = Association(
+                name=name, acronym=acronym, organisation_id=organisation.id
+            )
+            session.add(association)
+            session.flush()
+            self._logger.info(
+                f"Created association: {name} ({acronym}) "
+                f"under organisation: {organisation.name}"
+            )
+        return association
 
     def _get_or_create_team_membership(
         self, session: Session, player: Player, team: Team, season: Season
