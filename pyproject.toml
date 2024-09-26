@@ -14,6 +14,7 @@ requests = "^2.32.3"
 sqlalchemy = "^2.0.35"
 psycopg2-binary = "^2.9.9"
 asyncpg = "^0.29.0"
+trueskill = "^0.4.5"
 
 
 [tool.poetry.group.dev.dependencies]
