@@ -6,7 +6,6 @@ import uuid
 from sqlalchemy import (
     CheckConstraint,
     Date,
-    Enum as SqlEnum,
     Float,
     ForeignKey,
     Identity,
@@ -24,6 +23,7 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
+from sqlalchemy.types import Enum as SQLEnum
 
 
 class PlayerCategory(Enum):
@@ -70,15 +70,15 @@ class Organisation(BaseModel):
         String,
         unique=True,
         nullable=False,
-        index=True,
-        default="Deutscher Tischfußballbund e.V.",
+        init=False,
+        default="Bayerischer Tischfußballverband e.V.",
     )
     acronym: Mapped[str] = mapped_column(
         String,
         unique=True,
         nullable=False,
-        index=True,
-        default="DTFB",
+        init=False,
+        default="BTFV",
     )
 
     # Relationships
@@ -98,19 +98,10 @@ class Association(BaseModel):
     organisation_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("organisations.id"), nullable=False, index=True
     )
-    acronym: Mapped[str] = mapped_column(
-        String,
-        unique=True,
-        nullable=False,
-        index=True,
-        default="BTFV",
-    )
     name: Mapped[str] = mapped_column(
         String,
         unique=True,
         nullable=False,
-        index=True,
-        default="Bayerischer Tischfußballverband e.V.",
     )
 
     # Relationships
@@ -156,7 +147,10 @@ class Player(BaseModel):
         String, unique=True, nullable=True, index=True, init=False
     )
     category: Mapped[PlayerCategory] = mapped_column(
-        SqlEnum(PlayerCategory), nullable=True, index=True, init=False
+        SQLEnum(PlayerCategory, values_callable=lambda x: [i.value for i in x]),
+        nullable=True,
+        index=True,
+        init=False,
     )
     current_mu: Mapped[float] = mapped_column(Float, nullable=False, index=True)
     current_sigma: Mapped[float] = mapped_column(Float, nullable=False, index=True)
@@ -231,7 +225,9 @@ class Division(BaseModel):
     __tablename__ = "divisions"
 
     name: Mapped[DivisionName] = mapped_column(
-        SqlEnum(DivisionName), nullable=False, index=True
+        SQLEnum(DivisionName, values_callable=lambda x: [i.value for i in x]),
+        nullable=False,
+        index=True,
     )
     hierarchy: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     region: Mapped[str] = mapped_column(String, nullable=True, index=True)

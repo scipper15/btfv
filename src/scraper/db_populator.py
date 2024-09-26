@@ -43,6 +43,8 @@ class DbPopulator:
         self._logger.debug("Extracting match metadata and data...")
         self._extractor.extract_data(page_id, html)
         season_year = self._extractor.season
+        association_home_team = self._extractor.meta["association_home_team"]
+        association_away_team = self._extractor.meta["association_away_team"]
         try:
             # Create or get season
             self._logger.debug("Creating season.")
@@ -62,26 +64,34 @@ class DbPopulator:
             self._logger.debug("Creating organisation.")
             organisation = self._get_or_create_organisation(
                 session,
-                name="Deutscher Tischfußballbund e.V.",
-                acronym="DTFB",
             )
 
             # Create or get association
             self._logger.debug("Creating association.")
-            association = self._get_or_create_association(
+            home_team_association = self._get_or_create_association(
                 session,
-                name="Bayerischer Tischfußballverband e.V.",
-                acronym="BTFV",
+                name=association_home_team,
+                organisation=organisation,
+            )
+            away_team_association = self._get_or_create_association(
+                session,
+                name=association_away_team,
                 organisation=organisation,
             )
 
             # Create or get teams
             self._logger.debug("Creating teams.")
             home_team = self._get_or_create_team(
-                session, self._extractor.meta["home_team"], division, association
+                session,
+                self._extractor.meta["home_team"],
+                division,
+                home_team_association,
             )
             away_team = self._get_or_create_team(
-                session, self._extractor.meta["away_team"], division, association
+                session,
+                self._extractor.meta["away_team"],
+                division,
+                away_team_association,
             )
 
             # Process matches and players
@@ -182,13 +192,15 @@ class DbPopulator:
     ) -> None:
         """Process match and player data, create necessary records."""
         if self._draws_possible(self._extractor.matches):
-            self._logger.info("Draws are possible!")
-            env_draw_probability = 0.2
+            self._logger.info("Draws are possible! Only double matches can be drawn.")
+            env_draw_probability_double = 0.2
         else:
             self._logger.info("Draws are NOT possible!")
-            env_draw_probability = 0.0
+            env_draw_probability_double = 0.0
+        env_draw_probability_single = 0.0
 
-        self.skill_calc = SkillCalc(draw_probability=env_draw_probability)
+        self.skill_calc_single = SkillCalc(draw_probability=env_draw_probability_single)
+        self.skill_calc_double = SkillCalc(draw_probability=env_draw_probability_double)
         for match_data in self._extractor.matches:
             # Fetch initial ratings for the players
             if match_data["match_type"] == "single":
@@ -201,23 +213,23 @@ class DbPopulator:
                 )
 
                 # Create TrueSkill Rating objects
-                h1_before = self.skill_calc.create_rating(
+                h1_before = self.skill_calc_single.create_rating(
                     mu=home_player1.current_mu, sigma=home_player1.current_sigma
                 )
-                a1_before = self.skill_calc.create_rating(
+                a1_before = self.skill_calc_single.create_rating(
                     mu=away_player1.current_mu, sigma=away_player1.current_sigma
                 )
 
                 # draw and win probabilities
-                draw_probability: float = self.skill_calc.env.quality(
+                draw_probability: float = self.skill_calc_single.env.quality(
                     [[h1_before], [a1_before]]
                 )
-                win_probability: float = self.skill_calc.win_probability(
+                win_probability: float = self.skill_calc_single.win_probability(
                     [h1_before], [a1_before]
                 )
 
                 # Rate players based on match outcome
-                h1_after, a1_after = self.skill_calc.rate_single_match(
+                h1_after, a1_after = self.skill_calc_single.rate_single_match(
                     h1_before,
                     a1_before,
                     winner="player1" if match_data["who_won"] == "home" else "player2",
@@ -272,16 +284,16 @@ class DbPopulator:
                     session, cast(str, match_data["p_away2"])
                 )
                 # Create TrueSkill Rating objects
-                h1_before = self.skill_calc.create_rating(
+                h1_before = self.skill_calc_double.create_rating(
                     mu=home_player1.current_mu, sigma=home_player1.current_sigma
                 )
-                h2_before = self.skill_calc.create_rating(
+                h2_before = self.skill_calc_double.create_rating(
                     mu=home_player2.current_mu, sigma=home_player2.current_sigma
                 )
-                a1_before = self.skill_calc.create_rating(
+                a1_before = self.skill_calc_double.create_rating(
                     mu=away_player1.current_mu, sigma=away_player1.current_sigma
                 )
-                a2_before = self.skill_calc.create_rating(
+                a2_before = self.skill_calc_double.create_rating(
                     mu=away_player2.current_mu, sigma=away_player2.current_sigma
                 )
 
@@ -290,8 +302,8 @@ class DbPopulator:
                 team2 = [a1_before, a2_before]
 
                 # draw and win probabilities
-                draw_probability = self.skill_calc.env.quality([team1, team2])
-                win_probability = self.skill_calc.win_probability(team1, team2)
+                draw_probability = self.skill_calc_double.env.quality([team1, team2])
+                win_probability = self.skill_calc_double.win_probability(team1, team2)
 
                 # Rate teams based on match outcome
                 (
@@ -300,7 +312,7 @@ class DbPopulator:
                         a1_after,
                         a2_after,
                     ),
-                ) = self.skill_calc.rate_double_match(
+                ) = self.skill_calc_double.rate_double_match(
                     team1,
                     team2,
                     winner="team1" if match_data["who_won"] == "home" else "team2",
@@ -434,31 +446,30 @@ class DbPopulator:
             session.add(match_participant_home2)
             session.add(match_participant_away2)
 
-    def _get_or_create_organisation(
-        self, session: Session, name: str, acronym: str
-    ) -> Organisation:
+    def _get_or_create_organisation(self, session: Session) -> Organisation:
         """Retrieve or create a new Organisation."""
+        # hardcoded: For now there is only BTFV
+        name = "Bayerischer Tischfußballverband e.V."
+        acronym = "BTFV"
         organisation = session.query(Organisation).filter_by(name=name).first()
         if not organisation:
-            organisation = Organisation(name=name, acronym=acronym)
+            organisation = Organisation()
             session.add(organisation)
             session.flush()
             self._logger.info(f"Created organisation: {name} ({acronym})")
         return organisation
 
     def _get_or_create_association(
-        self, session: Session, name: str, acronym: str, organisation: Organisation
+        self, session: Session, name: str, organisation: Organisation
     ) -> Association:
         """Retrieve or create a new Association."""
         association = session.query(Association).filter_by(name=name).first()
         if not association:
-            association = Association(
-                name=name, acronym=acronym, organisation_id=organisation.id
-            )
+            association = Association(name=name, organisation_id=organisation.id)
             session.add(association)
             session.flush()
             self._logger.info(
-                f"Created association: {name} ({acronym}) "
+                f"Created association (Verein): {name} "
                 f"under organisation: {organisation.name}"
             )
         return association
