@@ -1,5 +1,3 @@
-from bs4 import BeautifulSoup
-
 from scraper.db_populator import DbPopulator
 from scraper.extractor import Extractor
 from scraper.file_handler import FileHandler
@@ -42,12 +40,11 @@ def main() -> None:
         extractor=extractor,
         db_populator=db_populator,
         database=database,
+        file_handler=file_handler,
     )
-    with open(
-        "/home/menn/btfv/data/raw_html/spielbericht_8.html", encoding="utf-8"
-    ) as file:
-        html = BeautifulSoup(file.read(), "html.parser")
-    scraping_manager.populate_db(html=html, season=2012, page_id=8)
+    # scraping_manager.process_seasons()
+    scraping_manager.populate_with_all_available_cached_data()
+    # scraping_manager.populate_by_page_id()
 
 
 if __name__ == "__main__":

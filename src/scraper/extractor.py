@@ -117,6 +117,14 @@ class Extractor:
                 return datetime.strptime(date_match.group(), "%d.%m.%Y")
         raise ElementNotFound("No 'Date' found in <small> tag.")
 
+    def extract_season_year(self, html) -> int:
+        small = html.find("small").text.strip()
+        if small:
+            date_match = re.search(r"\d{2}.\d{2}.\d{4}", small)
+            if date_match:
+                return datetime.strptime(date_match.group(), "%d.%m.%Y").year
+        raise ElementNotFound("No 'Date' found in <small> tag.")
+
     def extract_urls(self, page_type: str, html: BeautifulSoup) -> list[str]:
         pattern = re.compile(
             re.escape(f"{self._settings.BTFV_URL_BASE}/{page_type}/anzeigen/")
@@ -132,8 +140,8 @@ class Extractor:
     def extract_page_id_from_url(self, url: str) -> int:
         return int(url.split("/")[-2])
 
-    def extract_data(self, season: int, page_id: int, html: BeautifulSoup):
-        self.season = season
+    def extract_data(self, page_id: int, html: BeautifulSoup):
+        self.season = self.extract_season_year(html=html)
         self.page_id = page_id
         self.html = html
         self.heading1 = self.html.find("h1")
@@ -332,12 +340,12 @@ class Extractor:
 
     def _extract_match_division(self) -> tuple[str, str]:
         if self.heading1:
-            division = re.search(r"(.*?)(?=\s*Spieltag)", self.heading1.text)
+            division = re.search(r"(.*?)(?=\s*Spieltag)", self.heading1.text.strip())
             if division:
                 pattern = (
                     r"\b(?P<division>Landesliga|Verbandsliga|Bezirksliga|Kreisliga)"
                     r"\b(?:\s+(?P<region>Gruppe\s[A-D]|(?:Bayern|Nord|Süd|West|Ost)"
-                    r"(?:[-]?(?:[A-Za-z]+))?(?:\s+[12])?))\s*(?!\d{4})"
+                    r"(?:[-]?(?:[A-Za-z]+))?(?:\s+[12])?))?"
                 )
                 match = re.search(pattern, division.group(1).strip())
                 if match:

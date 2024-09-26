@@ -5,7 +5,9 @@ from bs4 import BeautifulSoup
 
 from scraper.db_populator import DbPopulator
 from scraper.extractor import Extractor
+from scraper.file_handler import FileHandler
 from scraper.scraper import PlayerScraper, Scraper
+from shared.config import settings
 from shared.config.settings import Settings
 from shared.database.database import Database
 
@@ -20,6 +22,7 @@ class ScrapingManager:
         extractor: Extractor,
         db_populator: DbPopulator,
         database: Database,
+        file_handler: FileHandler,
     ) -> None:
         self.logger = logger
         self.settings = settings
@@ -28,6 +31,7 @@ class ScrapingManager:
         self.extractor = extractor
         self.db_populator = db_populator
         self.database = database
+        self.file_handler = file_handler
         self._generate_starting_url()
 
     def _generate_starting_url(self) -> list[str]:
@@ -109,7 +113,7 @@ class ScrapingManager:
             sorted_match_reports = self._sort_match_reports(match_report_data)
             new_match_report_data_by_season[season] = sorted_match_reports
 
-        self._log_and_extract_data(new_match_report_data_by_season)
+        self.extract_data_and_populate_db(new_match_report_data_by_season)
 
     def process_season(self, season: int) -> None:
         """Convenience function: Process one season."""
@@ -117,9 +121,9 @@ class ScrapingManager:
 
     def populate_db(self, html: BeautifulSoup, season: int, page_id: int) -> None:
         self.database.init_db()
-        self.db_populator.populate(html=html, season_year=season, page_id=page_id)
+        self.db_populator.populate(page_id=page_id, html=html)
 
-    def _log_and_extract_data(
+    def extract_data_and_populate_db(
         self,
         new_match_report_data_by_season: dict[int, list[tuple[int, BeautifulSoup]]],
     ) -> None:
@@ -132,6 +136,22 @@ class ScrapingManager:
             for season, tuple_list in new_match_report_data_by_season.items():
                 self.logger.info(f"{season}: {len(tuple_list)} match reports.")
                 for page_id, html in tuple_list:
-                    self.extractor.extract_data(season, page_id, html)
+                    self.db_populator.populate(page_id, html)
         else:
             self.logger.info("No new match reports found.")
+
+    def populate_with_all_available_cached_data(self) -> None:
+        # new_match_report_data_by_season: dict[int, list[tuple[int, BeautifulSoup]]],
+        self.database.init_db()
+        file_paths = self.file_handler.get_all_cached_match_reports()
+        for file_path in file_paths:
+            page_id = self.file_handler.extract_page_id_from_path(file_path=file_path)
+            html = self.file_handler.read_HTML(file_path=file_path)
+            self.db_populator.populate(page_id=page_id, html=html)
+
+    def populate_by_page_id(self) -> None:
+        # convenient function for debugging a particular match report
+        page_id = 1499
+        path = settings.settings.RAW_HTML_PATH / f"spielbericht_{page_id}.html"
+        html = self.file_handler.read_HTML(path)
+        self.db_populator.populate(page_id=page_id, html=html)

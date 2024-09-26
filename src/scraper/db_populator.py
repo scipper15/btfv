@@ -36,15 +36,14 @@ class DbPopulator:
         self._extractor = extractor
         self._database = database
 
-    def populate(self, html: BeautifulSoup, season_year: int, page_id: int) -> None:
+    def populate(self, page_id: int, html: BeautifulSoup) -> None:
         """Main function to populate the database with extracted data."""
         session = self._database.get_sync_session()()
-        self._extractor.extract_data(season_year, page_id, html)
+        # Extract match metadata and data
+        self._logger.debug("Extracting match metadata and data...")
+        self._extractor.extract_data(page_id, html)
+        season_year = self._extractor.season
         try:
-            # Extract match metadata and data
-            self._logger.debug("Extracting match metadata and data...")
-            self._extractor.extract_data(season_year, page_id, html)
-
             # Create or get season
             self._logger.debug("Creating season.")
             season = self._get_or_create_season(session, season_year)

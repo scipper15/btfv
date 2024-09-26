@@ -1,6 +1,7 @@
 import hashlib
 from logging import Logger
 from pathlib import Path
+import re
 
 from bs4 import BeautifulSoup
 
@@ -44,3 +45,17 @@ class FileHandler:
 
     def exists(self, path: Path) -> bool:
         return True if path.exists() else False
+
+    def get_all_cached_match_reports(self) -> list[Path]:
+        path = self._settings.RAW_HTML_PATH
+        return list(path.glob("spielbericht_*.html"))
+
+    def extract_page_id_from_path(self, file_path: Path) -> int:
+        # Extract the file name from the complete path
+        file_name = file_path.name
+        # Use a regular expression to find the number in the file name
+        match = re.search(r"\d+", file_name)
+        if match:
+            return int(match.group())
+        else:
+            raise ValueError("No number found in the file name")
