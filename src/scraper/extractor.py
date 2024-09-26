@@ -19,6 +19,7 @@ class Extractor:
             "Aschbach": "FK Aschbach",
             "Augsburg": "Soccer Connection Augsburg",
             "Bamberg": "TFC Bamberg",
+            "Burgheim": "Speed Ball Team Burgheim",
             "Forchheim": "TFC Forchheim",
             "Ingolstadt": "ESV Ingolstadt Ringsee e.V.",
             "KC München": "KC München",
@@ -98,6 +99,7 @@ class Extractor:
             "Willmann, Günther": "Willmann, Günter",
             "Zarember, Tobias": "Zaremba, Tobias",
             "Zarember, T.": "Zaremba, T.",
+            "Ostermann, André": "Ostermann, Andree",
         }
     )
 
@@ -274,7 +276,10 @@ class Extractor:
 
                         # if invalid player name skip the match data
                         opponents_single = (p_home1, p_away1)
-                        if any(opponents_single) is None:
+                        if (
+                            any(opponents_single) is None
+                            or any(opponents_single) in Extractor.players_to_remove
+                        ):
                             continue
                         # sanitize player name abbreviations
                         p_home1, p_away1 = Extractor._sanitize_player_names(
