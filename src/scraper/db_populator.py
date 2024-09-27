@@ -195,7 +195,9 @@ class DbPopulator:
             self._logger.info("Draws are possible! Only double matches can be drawn.")
             env_draw_probability_double = 0.2
         else:
-            self._logger.info("Draws are NOT possible!")
+            self._logger.info(
+                "Draws are NOT possible (both single and double matches)."
+            )
             env_draw_probability_double = 0.0
         env_draw_probability_single = 0.0
 
