@@ -31,6 +31,7 @@ def main() -> None:
         settings=settings,
         extractor=extractor,
         database=database,
+        filehandler=file_handler,
     )
     scraping_manager = ScrapingManager(
         logger=scraping_manager_logger,
@@ -44,8 +45,8 @@ def main() -> None:
     )
     # scraping_manager.process_seasons()
     # scraping_manager.populate_with_all_available_cached_data()
-    # scraping_manager.populate_by_page_id()
-    scraping_manager.get_all_player_html()
+    scraping_manager.populate_by_page_id()
+    # scraping_manager.get_all_player_html()
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 import trueskill  # type: ignore
 
 from scraper.extractor import Extractor
+from scraper.file_handler import FileHandler
 from scraper.skill_calc import SkillCalc
 from shared.config.settings import Settings
 from shared.database.database import Database
@@ -17,6 +18,7 @@ from shared.database.models import (
     MatchParticipant,
     Organisation,
     Player,
+    PlayerCategory,
     Season,
     Team,
     TeamMembership,
@@ -30,11 +32,13 @@ class DbPopulator:
         settings: Settings,
         extractor: Extractor,
         database: Database,
+        filehandler: FileHandler,
     ) -> None:
         self._logger = logger
         self._settings = settings
         self._extractor = extractor
         self._database = database
+        self._filehandler = filehandler
 
     def populate(self, page_id: int, html: BeautifulSoup) -> None:
         """Main function to populate the database with extracted data."""
@@ -174,8 +178,25 @@ class DbPopulator:
         """Retrieve or create a new Player."""
         player = session.query(Player).filter_by(name=player_name).first()
         if not player:
+            player_html_path = self._filehandler.generate_path_for_player(
+                player_name=player_name
+            )
+            if self._filehandler.exists(player_html_path):
+                html = self._filehandler.read_HTML(file_path=player_html_path)
+                player_info = self._extractor.extract_DTFB_player_information(
+                    player_html=html, player_name=player_name
+                )
+                category_string = player_info.get("category", None)
+                if category_string:
+                    category = self.get_category_enum_from_value(category_string)
+            else:
+                category = None
+                player_info = {}
             player = Player(
                 name=player_name,
+                category=category if category else PlayerCategory.UNBEKANNT,
+                national_id=player_info.get("national_id", None),
+                international_id=player_info.get("international_id"),
                 current_mu=25.0,  # default value for mu
                 current_sigma=8.0,  # default value for sigma
             )
@@ -506,6 +527,12 @@ class DbPopulator:
             if enum_value.value == division_name:
                 return enum_value
         raise ValueError(f"Invalid division name: {division_name}")
+
+    def get_category_enum_from_value(self, category_name: str) -> PlayerCategory:
+        for enum_value in PlayerCategory:
+            if enum_value.value == category_name:
+                return enum_value
+        raise ValueError(f"Invalid division name: {category_name}")
 
     def _draws_possible(self, matches_list: list[dict[str, Any]]) -> bool:
         # Iterate over each match in the list

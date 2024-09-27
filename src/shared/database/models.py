@@ -27,8 +27,11 @@ from sqlalchemy.types import Enum as SQLEnum
 
 
 class PlayerCategory(Enum):
-    JUNIOR = "Junior"
-    SENIOR = "Senior"
+    HERREN = "Herren"
+    DAMEN = "Damen"
+    JUNIOREN = "Junioren"
+    SENIOR = "Senioren"
+    UNBEKANNT = "Unbekannt"
 
 
 class DivisionName(Enum):
@@ -146,19 +149,16 @@ class Player(BaseModel):
     birth_name: Mapped[Optional[str]] = mapped_column(
         String, unique=True, nullable=True, index=True, init=False
     )
-    category: Mapped[PlayerCategory] = mapped_column(
+    category: Mapped[PlayerCategory | None] = mapped_column(
         SQLEnum(PlayerCategory, values_callable=lambda x: [i.value for i in x]),
         nullable=True,
         index=True,
-        init=False,
     )
     current_mu: Mapped[float] = mapped_column(Float, nullable=False, index=True)
     current_sigma: Mapped[float] = mapped_column(Float, nullable=False, index=True)
-    national_id: Mapped[str] = mapped_column(
-        String, unique=True, nullable=True, index=True, init=False
-    )
-    international_id: Mapped[Optional[str]] = mapped_column(
-        String, unique=True, nullable=True, index=True, init=False
+    national_id: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
+    international_id: Mapped[str | None] = mapped_column(
+        String, unique=True, nullable=True
     )
 
     # Relationships

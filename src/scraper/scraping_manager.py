@@ -153,7 +153,7 @@ class ScrapingManager:
     def populate_by_page_id(self) -> None:
         # convenient function for debugging a particular match report
         self.database.init_db()
-        page_id = 1499
+        page_id = 1721
         path = settings.settings.RAW_HTML_PATH / f"spielbericht_{page_id}.html"
         html = self.file_handler.read_HTML(path)
         self.db_populator.populate(page_id=page_id, html=html)

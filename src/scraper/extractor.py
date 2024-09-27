@@ -387,7 +387,7 @@ class Extractor:
             return (home_team, away_team)
         raise ElementNotFound("No team names found in <h1>-tag.")
 
-    def _extract_DTFB_player_information(
+    def extract_DTFB_player_information(
         self, player_html: BeautifulSoup, player_name: str
     ) -> dict[str, str | None]:
         tables = player_html.find_all("table")
