@@ -43,8 +43,9 @@ def main() -> None:
         file_handler=file_handler,
     )
     # scraping_manager.process_seasons()
-    scraping_manager.populate_with_all_available_cached_data()
+    # scraping_manager.populate_with_all_available_cached_data()
     # scraping_manager.populate_by_page_id()
+    scraping_manager.get_all_player_html()
 
 
 if __name__ == "__main__":

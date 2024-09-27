@@ -32,6 +32,7 @@ class ScrapingManager:
         self.db_populator = db_populator
         self.database = database
         self.file_handler = file_handler
+        self.player_scraper = player_scraper
         self._generate_starting_url()
 
     def _generate_starting_url(self) -> list[str]:
@@ -151,7 +152,19 @@ class ScrapingManager:
 
     def populate_by_page_id(self) -> None:
         # convenient function for debugging a particular match report
+        self.database.init_db()
         page_id = 1499
         path = settings.settings.RAW_HTML_PATH / f"spielbericht_{page_id}.html"
         html = self.file_handler.read_HTML(path)
         self.db_populator.populate(page_id=page_id, html=html)
+
+    def get_all_player_html(self) -> None:
+        file_paths = self.file_handler.get_all_cached_match_reports()
+        for file_path in file_paths:
+            page_id = self.file_handler.extract_page_id_from_path(file_path=file_path)
+            html = self.file_handler.read_HTML(file_path=file_path)
+            self.extractor.extract_data(page_id=page_id, html=html)
+            for player_name in (
+                self.extractor.away_players + self.extractor.away_players
+            ):
+                self.player_scraper.get_player_html(player_name=player_name)

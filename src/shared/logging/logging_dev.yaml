@@ -25,6 +25,10 @@ loggers:
     level: DEBUG
     handlers: [console]
     propagate: False
+  playerscraper:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
   skillcalc:
     level: DEBUG
     handlers: [console]

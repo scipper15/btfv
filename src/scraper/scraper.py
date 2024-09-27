@@ -1,10 +1,12 @@
 from datetime import datetime
 from logging import Logger
+import re
 from typing import cast
 
 from bs4 import BeautifulSoup
 import requests
 
+from scraper.custom_errors import ElementNotFound
 from scraper.extractor import Extractor
 from scraper.file_handler import FileHandler
 from shared.config.settings import Settings
@@ -66,41 +68,136 @@ class PlayerScraper:
         self._file_handler = file_handler
         self._settings = settings
 
-    def get_player_html(self, player_name: str) -> BeautifulSoup | None:
+    def get_player_html(self, player_name: str) -> BeautifulSoup | int | None:
+        """Returns html (from url or if cached from file) or DTFB_from_id or None."""
         path = self._file_handler.generate_path_for_player(player_name=player_name)
         if not self._file_handler.exists(path):
-            self._logger.info("Retrieving additional player Information from DTFB:")
-            search_url = self._settings.DTFB_URL_BASE
-            data = {
-                "filter": player_name,
-                "veranstalterid": 6,  # value for "Bayerischer Tischfußballverband BTFV"
-            }
-
-            r = requests.post(search_url, data=data)
-            r.raise_for_status()
-            soup = BeautifulSoup(r.text, "html.parser")
-
-            # find the link to the player details page
-            # m.b.: assuming first hit is the right one
-            player_detail_link = soup.find(
-                "a", href=lambda href: href and "task=spieler_details" in href
-            )
-
-            if player_detail_link is None:
-                self._logger.warning(f"Player {player_name} not found")
+            # file does not exist, but player information might not be available online
+            already_tried = self._already_tried(player_name=player_name)
+            if isinstance(already_tried, int) and not isinstance(already_tried, bool):
+                DTFB_from_id: int = already_tried
+                return DTFB_from_id
+            elif already_tried:
+                # unsuccessfully tried before
+                self._logger.info(
+                    "Unsuccessfully tried before: Giving up, no further "
+                    "player information available online."
+                )
                 return None
+            else:
+                # try to scrape the player
+                self._logger.info("Retrieving additional player Information from DTFB:")
+                search_url = self._settings.DTFB_URL_BASE
+                data = {
+                    "filter": player_name,
+                    # value for "Bayerischer Tischfußballverband BTFV"
+                    "veranstalterid": 6,
+                }
 
-            # Extract the relevant part of the URL
-            player_detail_url: str = cast(str, player_detail_link["href"])  # type: ignore
-            parts = player_detail_url.split("&")
-            full_player_url = f"https://dtfb.de{parts[0]}&{parts[1]}"
-            print(f"Player details URL: {full_player_url}")
+                r = requests.post(search_url, data=data)
+                r.raise_for_status()
+                soup = BeautifulSoup(r.text, "html.parser")
 
-            # Now, request the player details page
-            player_response = requests.get(full_player_url)
-            player_response.raise_for_status()
+                # find the link to the player details page
+                # m.b.: assuming first hit is the right one
+                player_detail_link = soup.find(
+                    "a", href=lambda href: href and "task=spieler_details" in href
+                )
 
-            return BeautifulSoup(player_response.text, "html.parser")
+                if player_detail_link is None:
+                    self._logger.warning(
+                        f"Player {player_name} not found, writing to csv"
+                    )
+                    self._file_handler.append_to_csv(
+                        file_path=self._settings.DTFB_CSV_FILE,
+                        data={
+                            "player_hash": self._file_handler.generate_hash(
+                                player_name
+                            ),
+                            "DTFB_from_id": "",
+                            "player_name": player_name,
+                        },
+                    )
+                    return None
+
+                # Extract the relevant part of the URL
+                player_detail_url: str = cast(str, player_detail_link["href"])  # type: ignore
+                parts = player_detail_url.split("&")
+                match = re.search(r"(\d)+", parts[1])
+                if match:
+                    DTFB_from_id = int(match.group())
+                    print("DTFB_from_id:", DTFB_from_id)
+
+                    full_player_url = f"https://dtfb.de{parts[0]}&{parts[1]}"
+                    self._logger.info(f"Player details URL: {full_player_url}")
+
+                    # Now, request the player details page
+                    player_response = requests.get(full_player_url)
+                    player_response.raise_for_status()
+                    # cache to disk
+                    if player_response:
+                        self._file_handler.write_HTML(
+                            BeautifulSoup(player_response.text, "html.parser"),
+                            path,
+                        )
+                        self._file_handler.append_to_csv(
+                            file_path=self._settings.DTFB_CSV_FILE,
+                            data={
+                                "player_hash": self._file_handler.generate_hash(
+                                    player_name
+                                ),
+                                "DTFB_from_id": DTFB_from_id,
+                                "player_name": player_name,
+                            },
+                        )
+                        html = BeautifulSoup(player_response.text, "html.parser")
+                        # download image
+                        self._find_and_download_image(
+                            html=html, player_name=player_name
+                        )
+                        return html
+                raise ElementNotFound("DTFB_from_id not found")
         else:
+            # get data from file
             self._logger.info("Retrieving additional player Information from file:")
             return self._file_handler.read_HTML(path)
+
+    def _already_tried(self, player_name: str) -> bool | int:
+        player_data = self._file_handler.read_csv_as_dict(
+            file_path=self._settings.DTFB_CSV_FILE
+        )
+        player_hash = self._file_handler.generate_hash(string=player_name)
+        # look up player hash / player name and if a DTFB ID already has been cached
+        for row in player_data:
+            if row["player_hash"] == player_hash:
+                # means already tried to scrape
+                if row["DTFB_from_id"]:
+                    # successfully tried to retrieve player before
+                    return int(row["DTFB_from_id"])
+                else:
+                    # unsuccessfully tried to retrieve player before
+                    return True
+        # never tried to look up player online
+        return False
+
+    def _find_and_download_image(self, html: BeautifulSoup, player_name: str) -> None:
+        # Find the URL with "spieler" and ending in ".jpg"
+        pattern = re.compile(r'https://[^"]*spieler[^"]*\.jpg|png')
+        match = html.find("img", {"src": pattern})
+
+        if match and "src" in match.attrs:  # type: ignore
+            image_url = match["src"]  # type: ignore
+            self._logger.info(f"Found image URL: {image_url}")
+            if (
+                image_url
+                == "https://dtfb.de/images/sportsmanager/spieler/ImT1661962960W180H240.png"
+            ):
+                self._logger.info("Only dummy image, not saving")
+                return
+            response = requests.get(image_url)  # type: ignore
+            response.raise_for_status()
+            self._file_handler.write_image(response, player_name)
+
+        else:
+            self._logger.info("No matching image URL found in HTML.")
+            return
