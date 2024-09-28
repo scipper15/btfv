@@ -34,12 +34,13 @@ class Settings(BaseSettings):
     # database
     POSTGRES_USER: str = Field(default="docker")
     POSTGRES_PASSWORD: str = Field(default="docker")
+    POSTGRES_HOST: str = Field(default="db")
     POSTGRES_DB: str = Field(default="db")
     SYNC_URL: str = Field(
-        default="postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
+        default="postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
     )
     ASYNC_URL: str = Field(
-        default="postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
+        default="postgresql+asyncpg://{POSTGRES_USER}:${POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
     )
 
     @field_validator("RAW_HTML_PATH", mode="before")
