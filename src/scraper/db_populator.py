@@ -1,4 +1,5 @@
 from logging import Logger
+import traceback
 from typing import Any, Union, cast
 
 from bs4 import BeautifulSoup
@@ -115,6 +116,10 @@ class DbPopulator:
         except Exception as e:
             session.rollback()
             self._logger.error(f"Error populating database: {e!s}")
+            self._logger.error(traceback.format_exc())
+
+            # Re-raise the exception to stop further execution
+            raise
         finally:
             session.close()
 
@@ -279,6 +284,7 @@ class DbPopulator:
                 away_player1.current_sigma = a1_after.sigma
 
                 session.flush()
+                session.commit()
 
                 player_ratings: Union[
                     # For singles matches

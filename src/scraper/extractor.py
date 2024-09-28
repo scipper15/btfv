@@ -47,7 +47,7 @@ class Extractor:
             "Würzburg": "Kurbelgemeinde Würzburg e. V.",
         }
     )
-    division_name_sanitizer = MappingProxyType(
+    team_name_sanitizer = MappingProxyType(
         {
             "DFST Passau": "DFST Passau 1",
             "KC Nurn": "KC Nurn 1",
@@ -70,7 +70,7 @@ class Extractor:
             "TSG Maisach e. V. 2": "TSG Maisach 2",
         }
     )
-    team_name_sanitizer = MappingProxyType(
+    division_name_sanitizer = MappingProxyType(
         {
             "Süd-Ost": "Südost",
             "Süd-West": "Südwest",
