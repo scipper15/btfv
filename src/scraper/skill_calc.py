@@ -63,7 +63,7 @@ class SkillCalc:
             )  # Team1 won
         else:  # winner == "team2"
             new_ratings = self.env.rate(
-                [team2_ratings, team1_ratings], ranks=[1, 0]
+                [team1_ratings, team2_ratings], ranks=[1, 0]
             )  # Team2 won
 
         # Unpack the new ratings for each team
