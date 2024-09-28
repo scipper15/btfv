@@ -43,9 +43,11 @@ def main() -> None:
         database=database,
         file_handler=file_handler,
     )
+    database.init_db()
     # scraping_manager.process_seasons()
-    # scraping_manager.populate_with_all_available_cached_data()
-    scraping_manager.populate_by_page_id()
+    scraping_manager.populate_with_all_available_cached_data()
+    # for page_id in [1734]:  # 1644, 1721, 1744, 1751
+    #     scraping_manager.populate_by_page_id(page_id=page_id)
     # scraping_manager.get_all_player_html()
 
 
