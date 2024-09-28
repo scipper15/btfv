@@ -16,6 +16,8 @@ psycopg2-binary = "^2.9.9"
 asyncpg = "^0.29.0"
 trueskill = "^0.4.5"
 matplotlib = "^3.9.2"
+scipy = "^1.14.1"
+seaborn = "^0.13.2"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -26,6 +28,7 @@ types-requests = "^2.32.0.20240914"
 types-beautifulsoup4 = "^4.12.0.20240907"
 types-pyyaml = "^6.0.12.20240917"
 vulture = "^2.12"
+types-seaborn = "^0.13.2.20240820"
 
 [build-system]
 requires = ["poetry-core"]
