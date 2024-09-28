@@ -145,15 +145,22 @@ class ScrapingManager:
         # new_match_report_data_by_season: dict[int, list[tuple[int, BeautifulSoup]]],
         self.database.init_db()
         file_paths = self.file_handler.get_all_cached_match_reports()
+        self.logger.info(
+            "Sorting the file path list by date. This might take a while..."
+        )
+        file_paths = sorted(
+            file_paths,
+            key=lambda filepath: self.extractor.extract_date(
+                BeautifulSoup(filepath.read_text(encoding="utf-8"), "html.parser")
+            ),
+        )
         for file_path in file_paths:
             page_id = self.file_handler.extract_page_id_from_path(file_path=file_path)
             html = self.file_handler.read_HTML(file_path=file_path)
             self.db_populator.populate(page_id=page_id, html=html)
 
-    def populate_by_page_id(self) -> None:
+    def populate_by_page_id(self, page_id) -> None:
         # convenient function for debugging a particular match report
-        self.database.init_db()
-        page_id = 1721
         path = settings.settings.RAW_HTML_PATH / f"spielbericht_{page_id}.html"
         html = self.file_handler.read_HTML(path)
         self.db_populator.populate(page_id=page_id, html=html)
