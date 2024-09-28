@@ -105,6 +105,7 @@ class DbPopulator:
                 home_team,
                 away_team,
                 season,
+                page_id,
             )
 
             # Commit transaction
@@ -139,7 +140,12 @@ class DbPopulator:
         division_enum = self.get_division_enum_from_value(division_name)
         division = (
             session.query(Division)
-            .filter_by(name=division_enum, hierarchy=hierarchy, season_id=season.id)
+            .filter_by(
+                name=division_enum,
+                hierarchy=hierarchy,
+                region=region,
+                season_id=season.id,
+            )
             .first()
         )
         if not division:
@@ -161,7 +167,11 @@ class DbPopulator:
         association: Association,
     ) -> Team:
         """Retrieve or create a new Team."""
-        team = session.query(Team).filter_by(name=team_name).first()
+        team = (
+            session.query(Team)
+            .filter_by(name=team_name, division_id=division.id)
+            .first()
+        )
         if not team:
             team = Team(
                 name=team_name, division_id=division.id, association_id=association.id
@@ -176,6 +186,7 @@ class DbPopulator:
         player_name: str,
     ) -> Player:
         """Retrieve or create a new Player."""
+        self._logger.info(f"Processing: {player_name}")
         player = session.query(Player).filter_by(name=player_name).first()
         if not player:
             player_html_path = self._filehandler.generate_path_for_player(
@@ -196,9 +207,10 @@ class DbPopulator:
                 name=player_name,
                 category=category if category else PlayerCategory.UNBEKANNT,
                 national_id=player_info.get("national_id", None),
-                international_id=player_info.get("international_id"),
+                international_id=player_info.get("international_id", None),
                 current_mu=25.0,  # default value for mu
                 current_sigma=8.0,  # default value for sigma
+                DTFB_from_id=player_info.get("DTFB_from_id", None),
             )
             session.add(player)
             session.flush()
@@ -210,6 +222,7 @@ class DbPopulator:
         home_team: Team,
         away_team: Team,
         season: Season,
+        page_id: int,
     ) -> None:
         """Process match and player data, create necessary records."""
         if self._draws_possible(self._extractor.matches):
@@ -225,6 +238,7 @@ class DbPopulator:
         self.skill_calc_single = SkillCalc(draw_probability=env_draw_probability_single)
         self.skill_calc_double = SkillCalc(draw_probability=env_draw_probability_double)
         for match_data in self._extractor.matches:
+            self._logger.info(match_data)
             # Fetch initial ratings for the players
             if match_data["match_type"] == "single":
                 self._logger.debug("Processing single match")
@@ -378,6 +392,7 @@ class DbPopulator:
                 home_team_id=home_team.id,
                 away_team_id=away_team.id,
                 season_id=season.id,
+                BTFV_from_id=page_id,
             )
 
             session.add(match)

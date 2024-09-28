@@ -156,10 +156,9 @@ class Player(BaseModel):
     )
     current_mu: Mapped[float] = mapped_column(Float, nullable=False, index=True)
     current_sigma: Mapped[float] = mapped_column(Float, nullable=False, index=True)
-    national_id: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
-    international_id: Mapped[str | None] = mapped_column(
-        String, unique=True, nullable=True
-    )
+    national_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    international_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    DTFB_from_id: Mapped[str | None] = mapped_column(Integer, nullable=True)
 
     # Relationships
     team_memberships: Mapped[List["TeamMembership"]] = relationship(
@@ -183,7 +182,7 @@ class Team(BaseModel):
 
     __tablename__ = "teams"
 
-    name: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, index=True)
 
     division_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("divisions.id"), nullable=False, index=True
@@ -227,23 +226,31 @@ class Division(BaseModel):
     name: Mapped[DivisionName] = mapped_column(
         SQLEnum(DivisionName, values_callable=lambda x: [i.value for i in x]),
         nullable=False,
-        index=True,
     )
     hierarchy: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    region: Mapped[str] = mapped_column(String, nullable=True, index=True)
+    region: Mapped[str] = mapped_column(
+        String,
+        nullable=True,
+        index=True,
+    )
 
     # Relationships
     teams: Mapped[List["Team"]] = relationship(
         "Team", back_populates="division", cascade="all, delete-orphan", init=False
     )
     season_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("seasons.id"), nullable=False, index=True
+        ForeignKey("seasons.id"), nullable=False
     )
     season: Mapped["Season"] = relationship(
         "Season", back_populates="divisions", init=False
     )
 
-    __table_args__ = (Index("ix_divisions_name_hierarchy", "name", "hierarchy"),)
+    __table_args__ = (
+        UniqueConstraint(
+            "name", "hierarchy", "region", "season_id", name="uq_division"
+        ),
+        Index("idx_hierarchy_region", "hierarchy", "region"),
+    )
 
 
 class Season(BaseModel):
@@ -292,6 +299,7 @@ class Match(BaseModel):
     match_type: Mapped[str] = mapped_column(
         String, nullable=False, index=True
     )  # 'single', 'double'
+    BTFV_from_id: Mapped[int] = mapped_column(Integer, nullable=False)
 
     home_team_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("teams.id"), nullable=False, index=True
@@ -321,7 +329,6 @@ class Match(BaseModel):
     )
 
     __table_args__ = (
-        UniqueConstraint("global_match_nr", "season_id", name="uq_global_match_season"),
         CheckConstraint("sets_home >= 0 AND sets_home <= 2", name="check_sets_home"),
         CheckConstraint("sets_away >= 0 AND sets_away <= 2", name="check_sets_away"),
     )
