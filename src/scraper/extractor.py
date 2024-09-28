@@ -2,7 +2,7 @@ from datetime import datetime
 from logging import Logger
 import re
 from types import MappingProxyType
-import typing
+from typing import Any, ClassVar, cast
 
 from bs4 import BeautifulSoup
 
@@ -49,11 +49,34 @@ class Extractor:
     )
     division_name_sanitizer = MappingProxyType(
         {
+            "DFST Passau": "DFST Passau 1",
+            "KC Nurn": "KC Nurn 1",
+            "Magic Soccer Marktleuthen": "Magic Soccer Marktleuthen 1",
+            "Maintalkicker Mainklein": "MK Mainklein 1",
+            "MK Mainklein": "MK Mainklein 1",
+            "Soccer Club Foosion Bayreuth": "Soccer Club Foosion Bayreuth 1",
+            "Soccer Team Landau": "Soccer Team Landau 1",
+            "Speed Ball Team Burgheim": "Speed Ball Team Burgheim 1",
+            "Spielkiste Kronach": "Spielkiste Kronach 1",
+            "TFC Allgäu": "TFC Allgäu 1",
+            "TFC Bamberg": "TFC Bamberg",
+            "TFC München": "TFC München 1",
+            "TFC Old Stars Rettenbach": "TFC Old Stars Rettenbach",
+            "TFC Olydorf": "TFC Olydorf",
+            "TFV München": "TFV München 1",
+            "TSC Weiden": "TSC Weiden 1",
+            "TSG Maisach e. V.": "TSG Maisach 1",
+            "TSG Maisach e. V. 1": "TSG Maisach 1",
+            "TSG Maisach e. V. 2": "TSG Maisach 2",
+        }
+    )
+    team_name_sanitizer = MappingProxyType(
+        {
             "Süd-Ost": "Südost",
             "Süd-West": "Südwest",
         }
     )
-    players_to_remove: typing.ClassVar = [
+    players_to_remove: ClassVar = [
         "1, Freilos",
         "2, Freilos",
         "3, Freilos",
@@ -97,6 +120,7 @@ class Extractor:
             "Hilgert, E.": "Hilgart, E.",
             "Jabiri, Souhail": "Jabiri, Souhayl",
             "Kastner, Matthias": "Kastner, Mathias",
+            "Ruisinger, Tobias": "Keie-Ruisinger, Tobias",
             "Kinál, Bálazs": "Kinál, Balázs",
             "Lang, Reinhard Giovanni": "Lang, Reinhard",
             "Lorz, Karlheinz": "Lorz, Karl-Heinz",
@@ -166,16 +190,20 @@ class Extractor:
         self._logger.info(f"{len(self.matches)} matches found.")
 
     @staticmethod
-    def extract_players(html: BeautifulSoup, home: bool) -> list[str]:
+    def extract_players(html: BeautifulSoup, home: bool) -> list[Any]:
         idx = 0 if home else 1
         tables = html.find_all("table")
         rows = tables[idx].find("tbody").find_all("tr")
         player_names = [row.find_all("td")[1].get_text(strip=True) for row in rows]
-        player_names = Extractor._sanitize_player_names(player_names=player_names)
+        player_names = cast(
+            list, Extractor._sanitize_player_names(player_names=player_names)
+        )
         return player_names
 
     @staticmethod
-    def _sanitize_player_names(player_names: list | tuple) -> list[str]:
+    def _sanitize_player_names(
+        player_names: list[Any] | tuple[Any, ...] | str,
+    ) -> list[str] | tuple | str:
         if isinstance(player_names, list):
             return [
                 Extractor.player_name_sanitizer.get(player_name, player_name)
@@ -186,6 +214,8 @@ class Extractor:
                 Extractor.player_name_sanitizer.get(player_name, player_name)
                 for player_name in player_names
             ]
+        elif isinstance(player_names, str):
+            return Extractor.player_name_sanitizer.get(player_names, player_names)
 
     def _sanitize_division_name(self, region: str) -> str:
         return Extractor.division_name_sanitizer.get(region, region)
@@ -216,14 +246,13 @@ class Extractor:
             player_map = player_map | {player_abbr: player}
         return player_map
 
-    def _extract_matches(self, player_map) -> list[dict[str, str | int]]:
+    def _extract_matches(self, player_map) -> list[dict[str, str | int]]:  # noqa
         matches_list: list[dict[str, str | int]] = []
         pattern = re.compile(r"(einzel|doppel)")
         tables = self.html.find_all("table", id=pattern)
         offset_double = 6
         offset_single = 4
         match_number = 0
-
         if tables:
             for idx, table in enumerate(tables):
                 table_id = table["id"]
@@ -233,16 +262,30 @@ class Extractor:
                     for step in range(0, len(tds), offset_double):
                         match_number += 1
 
-                        p_home1 = player_map.get(tds[0 + step].text.strip(), None)
-                        p_away1 = player_map.get(tds[2 + step].text.strip(), None)
-                        p_home2 = player_map.get(tds[4 + step].text.strip(), None)
-                        p_away2 = player_map.get(tds[5 + step].text.strip(), None)
+                        p_home1 = player_map.get(
+                            self._sanitize_player_names(tds[0 + step].text.strip()),
+                            None,
+                        )
+                        p_away1 = player_map.get(
+                            self._sanitize_player_names(tds[2 + step].text.strip()),
+                            None,
+                        )
+                        p_home2 = player_map.get(
+                            self._sanitize_player_names(tds[4 + step].text.strip()),
+                            None,
+                        )
+                        p_away2 = player_map.get(
+                            self._sanitize_player_names(tds[5 + step].text.strip()),
+                            None,
+                        )
 
-                        # if invalid player name skip the match data
                         opponents_double = (p_home1, p_home2, p_away1, p_away2)
-                        if (
-                            any(opponents_double) is None
-                            or any(opponents_double) in Extractor.players_to_remove
+
+                        # check for invalid player name: skip the match data
+                        if any(s is None for s in opponents_double):
+                            continue
+                        if any(
+                            s in Extractor.players_to_remove for s in opponents_double
                         ):
                             continue
 
@@ -252,7 +295,9 @@ class Extractor:
                             p_home2,
                             p_away1,
                             p_away2,
-                        ) = Extractor._sanitize_player_names(opponents_double)
+                        ) = cast(
+                            tuple, Extractor._sanitize_player_names(opponents_double)
+                        )
 
                         result = tds[3 + step].text.strip()
                         sets_home, sets_away, who_won = self._check_who_won(result)
@@ -276,20 +321,28 @@ class Extractor:
                     for step in range(0, len(tds), offset_single):
                         match_number += 1
 
-                        p_home1 = player_map.get(tds[0 + step].text.strip(), None)
-                        p_away1 = player_map.get(tds[2 + step].text.strip(), None)
+                        p_home1 = player_map.get(
+                            self._sanitize_player_names(tds[0 + step].text.strip()),
+                            None,
+                        )
+                        p_away1 = player_map.get(
+                            self._sanitize_player_names(tds[2 + step].text.strip()),
+                            None,
+                        )
                         result = tds[3 + step].text.strip()
 
                         # if invalid player name skip the match data
                         opponents_single = (p_home1, p_away1)
-                        if (
-                            any(opponents_single) is None
-                            or any(opponents_single) in Extractor.players_to_remove
+                        if any(s is None for s in opponents_single):
+                            continue
+                        if any(
+                            s in Extractor.players_to_remove for s in opponents_single
                         ):
                             continue
                         # sanitize player name abbreviations
-                        p_home1, p_away1 = Extractor._sanitize_player_names(
-                            opponents_single
+                        p_home1, p_away1 = cast(
+                            tuple,
+                            Extractor._sanitize_player_names(opponents_single),
                         )
 
                         sets_home, sets_away, who_won = self._check_who_won(result)
