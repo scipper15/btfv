@@ -1,6 +1,6 @@
 # Setting up the project
 
-## Installing Tools, Environment, Dependencies
+## Installing Tools And Dependencies
 
 We're using `pyenv` to manage `Python` versions and `poetry` to manage dependencies and
 the virtual environment on the host machine. We're using `pipx` to install `poetry`.
@@ -72,10 +72,46 @@ pre-commit install --install-hooks
 pre-commit run
 ```
 
-### Getting The Data
+## Environment Files And Variables
+
+### Primary `.env` File
+
+Docker will use the appropriate ´.env´ file base on the environment variable defined in the ´.env´ file:
+
+- `ACTIVE_ENV`: Specifies the active environment configuration file (e.g., `.env.dev`, `.env.prod`).
+
+Possible names for environments are as follows:
+
+- ´.env.dev´: Used for development.
+- ´.env.test´: Used for testing.
+- ´.env.prod: Used in production.
+
+Using ´Pydantic´ settings environment variables are selected automatically based on the presence of an ´.env´ file of those specific names. If several are found the precedence is ´prod´, ´test´, ´dev´.
+
+You might need to create and adapt the ´.env´ files, especially for production.
+
+### Environment-Specific Files (`.env.dev`, `.env.prod`, etc.)
+
+- `PYTHONDONTWRITEBYTECODE`: Set to `1` to prevent Python from writing `.pyc` files.
+- `PYTHONPATH`: Specifies the Python path.
+- `LOGGING_ENV`: Logging environment (`dev`, `prod`, etc.).
+- `POSTGRES_USER`: Database username.
+- `POSTGRES_PASSWORD`: Database password.
+- `POSTGRES_DB`: Database name.
+- `SYNC_URL`: Synchronous database connection URL.
+- `ASYNC_URL`: Asynchronous database connection URL.
+- `SCRAPER_INTERVAL`: Interval for the scraper in seconds.
+
+## Getting The Data
 
 Scraping of the full dataset takes pretty long. We don't want to strain the server unnecessarily:
 
 [Download matchreports](https://drive.google.com/drive/folders/1M2-xkV0-wgnaMoJMP4Jg6XpfW_kAsMQp?usp=sharing).
 
 Extract them in project folder to be recognized by the scraper.
+
+## Using Docker
+
+To start the docker services (including for instance the database) run: ´docker compose --profile dev --env-file .env.dev up --build´ explicitely specifying ´.env´ file to be used. Some services won't be started in production environment if using the docker ´prod´ profile, for instance ´adminer´.
+
+To stop docker services run ´docker compose down´. In development you can ´docker compose down -v´ if you want to reinitialize all mounted volumes.

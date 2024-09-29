@@ -11,16 +11,24 @@ python = "^3.12"
 beautifulsoup4 = "^4.12.3"
 pydantic-settings = "^2.5.2"
 requests = "^2.32.3"
+sqlalchemy = "^2.0.35"
+psycopg2-binary = "^2.9.9"
+asyncpg = "^0.29.0"
+trueskill = "^0.4.5"
+matplotlib = "^3.9.2"
+scipy = "^1.14.1"
+seaborn = "^0.13.2"
 
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^1.11.2"
+mypy = "1.10.1"
 pre-commit = "^3.8.0"
 ruff = "^0.6.6"
 types-requests = "^2.32.0.20240914"
 types-beautifulsoup4 = "^4.12.0.20240907"
 types-pyyaml = "^6.0.12.20240917"
 vulture = "^2.12"
+types-seaborn = "^0.13.2.20240820"
 
 [build-system]
 requires = ["poetry-core"]

@@ -2,7 +2,7 @@ from datetime import datetime
 from logging import Logger
 import re
 from types import MappingProxyType
-import typing
+from typing import Any, ClassVar, cast
 
 from bs4 import BeautifulSoup
 
@@ -11,13 +11,72 @@ from shared.config.settings import Settings
 
 
 class Extractor:
+    keyword_to_association = MappingProxyType(
+        {
+            "Aichach": "Speed Ball Team Aichach",
+            "Allgäu": "TFC Allgäu",
+            "Allgäukickers": "Allgäukickers",
+            "Aschbach": "FK Aschbach",
+            "Augsburg": "Soccer Connection Augsburg",
+            "Bamberg": "TFC Bamberg",
+            "Bayreuth": "Soccer Club Foosion Bayreuth",
+            "Burgheim": "Speed Ball Team Burgheim",
+            "Deggendorf": "Kicker-Club Deggendorf",
+            "First Floor Deggendorf": "First Floor Deggendorf",
+            "Forchheim": "TFC Forchheim",
+            "Ingolstadt": "ESV Ingolstadt Ringsee e.V.",
+            "KC München": "KC München",
+            "Kulmbach": "1. KSC Kulmbach e.V.",
+            "Landau": "KC Landau",
+            "Mainklein": "MK Mainklein",
+            "Maisach": "TSG Maisach",
+            "Marktleuthen": "Magic Soccer Marktleuthen",
+            "Mellrichstadt": "GEKA Mellrichstadt e.V",
+            "Münchberg": "TFC Münchberg",
+            "München": "TFV München",
+            "Nurn": "KC Nurn",
+            "Nürnberg": "TFC Nürnberg",
+            "Olydorf": "TFC Olydorf",
+            "Passau": "DFST Passau",
+            "Rettenbach": "TFC Old Stars Rettenbach",
+            "Kronach": "Spielkiste Kronach",
+            "Vilsbiburg": "Soccer Team Vilsbiburg",
+            "Volkach": "Kurbelfreunde Volkach",
+            "Vorderbreitenthann": "KDC Vorderbreitenthann e.V.",
+            "Weiden": "DJK Weiden e.V.",
+            "Würzburg": "Kurbelgemeinde Würzburg e. V.",
+        }
+    )
+    team_name_sanitizer = MappingProxyType(
+        {
+            "DFST Passau": "DFST Passau 1",
+            "KC Nurn": "KC Nurn 1",
+            "Magic Soccer Marktleuthen": "Magic Soccer Marktleuthen 1",
+            "Maintalkicker Mainklein": "MK Mainklein 1",
+            "MK Mainklein": "MK Mainklein 1",
+            "Soccer Club Foosion Bayreuth": "Soccer Club Foosion Bayreuth 1",
+            "Soccer Team Landau": "Soccer Team Landau 1",
+            "Speed Ball Team Burgheim": "Speed Ball Team Burgheim 1",
+            "Spielkiste Kronach": "Spielkiste Kronach 1",
+            "TFC Allgäu": "TFC Allgäu 1",
+            "TFC Bamberg": "TFC Bamberg",
+            "TFC München": "TFC München 1",
+            "TFC Old Stars Rettenbach": "TFC Old Stars Rettenbach",
+            "TFC Olydorf": "TFC Olydorf",
+            "TFV München": "TFV München 1",
+            "TSC Weiden": "TSC Weiden 1",
+            "TSG Maisach e. V.": "TSG Maisach 1",
+            "TSG Maisach e. V. 1": "TSG Maisach 1",
+            "TSG Maisach e. V. 2": "TSG Maisach 2",
+        }
+    )
     division_name_sanitizer = MappingProxyType(
         {
             "Süd-Ost": "Südost",
             "Süd-West": "Südwest",
         }
     )
-    players_to_remove: typing.ClassVar = [
+    players_to_remove: ClassVar = [
         "1, Freilos",
         "2, Freilos",
         "3, Freilos",
@@ -61,6 +120,7 @@ class Extractor:
             "Hilgert, E.": "Hilgart, E.",
             "Jabiri, Souhail": "Jabiri, Souhayl",
             "Kastner, Matthias": "Kastner, Mathias",
+            "Ruisinger, Tobias": "Keie-Ruisinger, Tobias",
             "Kinál, Bálazs": "Kinál, Balázs",
             "Lang, Reinhard Giovanni": "Lang, Reinhard",
             "Lorz, Karlheinz": "Lorz, Karl-Heinz",
@@ -69,6 +129,7 @@ class Extractor:
             "Willmann, Günther": "Willmann, Günter",
             "Zarember, Tobias": "Zaremba, Tobias",
             "Zarember, T.": "Zaremba, T.",
+            "Ostermann, André": "Ostermann, Andree",
         }
     )
 
@@ -88,6 +149,14 @@ class Extractor:
                 return datetime.strptime(date_match.group(), "%d.%m.%Y")
         raise ElementNotFound("No 'Date' found in <small> tag.")
 
+    def extract_season_year(self, html) -> int:
+        small = html.find("small").text.strip()
+        if small:
+            date_match = re.search(r"\d{2}.\d{2}.\d{4}", small)
+            if date_match:
+                return datetime.strptime(date_match.group(), "%d.%m.%Y").year
+        raise ElementNotFound("No 'Date' found in <small> tag.")
+
     def extract_urls(self, page_type: str, html: BeautifulSoup) -> list[str]:
         pattern = re.compile(
             re.escape(f"{self._settings.BTFV_URL_BASE}/{page_type}/anzeigen/")
@@ -103,34 +172,38 @@ class Extractor:
     def extract_page_id_from_url(self, url: str) -> int:
         return int(url.split("/")[-2])
 
-    def extract_data(self, season: int, page_id: int, html: BeautifulSoup):
-        self.season = season
+    def extract_data(self, page_id: int, html: BeautifulSoup):
+        self.season = self.extract_season_year(html=html)
         self.page_id = page_id
         self.html = html
         self.heading1 = self.html.find("h1")
-        self.metadata = self._extract_matchday_metadata()
+        self.meta = self._extract_matchday_metadata()
         self.home_players = Extractor.extract_players(html=self.html, home=True)
         self.away_players = Extractor.extract_players(html=self.html, home=False)
         self.player_map = self._create_player_map(self.home_players + self.away_players)
         self._logger.debug("Players on this matchday:")
-        [
-            self._logger.debug(f"{abbr}, {player}")  # type: ignore
-            for abbr, player in self.player_map.items()
-        ]
+
+        for abbr, player in self.player_map.items():
+            self._logger.debug(f"{abbr}, {player}")
+
         self.matches = self._extract_matches(self.player_map)
         self._logger.info(f"{len(self.matches)} matches found.")
 
     @staticmethod
-    def extract_players(html: BeautifulSoup, home: bool) -> list[str]:
+    def extract_players(html: BeautifulSoup, home: bool) -> list[Any]:
         idx = 0 if home else 1
         tables = html.find_all("table")
         rows = tables[idx].find("tbody").find_all("tr")
         player_names = [row.find_all("td")[1].get_text(strip=True) for row in rows]
-        player_names = Extractor._sanitize_player_names(player_names=player_names)
+        player_names = cast(
+            list, Extractor._sanitize_player_names(player_names=player_names)
+        )
         return player_names
 
     @staticmethod
-    def _sanitize_player_names(player_names: list | tuple) -> list[str]:
+    def _sanitize_player_names(
+        player_names: list[Any] | tuple[Any, ...] | str,
+    ) -> list[str] | tuple | str:
         if isinstance(player_names, list):
             return [
                 Extractor.player_name_sanitizer.get(player_name, player_name)
@@ -141,6 +214,8 @@ class Extractor:
                 Extractor.player_name_sanitizer.get(player_name, player_name)
                 for player_name in player_names
             ]
+        elif isinstance(player_names, str):
+            return Extractor.player_name_sanitizer.get(player_names, player_names)
 
     def _sanitize_division_name(self, region: str) -> str:
         return Extractor.division_name_sanitizer.get(region, region)
@@ -171,14 +246,13 @@ class Extractor:
             player_map = player_map | {player_abbr: player}
         return player_map
 
-    def _extract_matches(self, player_map) -> list[dict[str, str]]:
-        matches_list: list[dict[str, str]] = []
+    def _extract_matches(self, player_map) -> list[dict[str, str | int]]:  # noqa
+        matches_list: list[dict[str, str | int]] = []
         pattern = re.compile(r"(einzel|doppel)")
         tables = self.html.find_all("table", id=pattern)
         offset_double = 6
         offset_single = 4
         match_number = 0
-
         if tables:
             for idx, table in enumerate(tables):
                 table_id = table["id"]
@@ -188,16 +262,30 @@ class Extractor:
                     for step in range(0, len(tds), offset_double):
                         match_number += 1
 
-                        p_home1 = player_map.get(tds[0 + step].text.strip(), None)
-                        p_away1 = player_map.get(tds[2 + step].text.strip(), None)
-                        p_home2 = player_map.get(tds[4 + step].text.strip(), None)
-                        p_away2 = player_map.get(tds[5 + step].text.strip(), None)
+                        p_home1 = player_map.get(
+                            self._sanitize_player_names(tds[0 + step].text.strip()),
+                            None,
+                        )
+                        p_away1 = player_map.get(
+                            self._sanitize_player_names(tds[2 + step].text.strip()),
+                            None,
+                        )
+                        p_home2 = player_map.get(
+                            self._sanitize_player_names(tds[4 + step].text.strip()),
+                            None,
+                        )
+                        p_away2 = player_map.get(
+                            self._sanitize_player_names(tds[5 + step].text.strip()),
+                            None,
+                        )
 
-                        # if invalid player name skip the match data
                         opponents_double = (p_home1, p_home2, p_away1, p_away2)
-                        if (
-                            any(opponents_double) is None
-                            or any(opponents_double) in Extractor.players_to_remove
+
+                        # check for invalid player name: skip the match data
+                        if any(s is None for s in opponents_double):
+                            continue
+                        if any(
+                            s in Extractor.players_to_remove for s in opponents_double
                         ):
                             continue
 
@@ -207,14 +295,16 @@ class Extractor:
                             p_home2,
                             p_away1,
                             p_away2,
-                        ) = Extractor._sanitize_player_names(opponents_double)
+                        ) = cast(
+                            tuple, Extractor._sanitize_player_names(opponents_double)
+                        )
 
                         result = tds[3 + step].text.strip()
                         sets_home, sets_away, who_won = self._check_who_won(result)
 
                         matches_list.append(
                             {
-                                "match_number": str(match_number),
+                                "match_number": match_number,
                                 "match_type": "double",
                                 "who_won": who_won,
                                 "p_home1": p_home1,
@@ -231,24 +321,35 @@ class Extractor:
                     for step in range(0, len(tds), offset_single):
                         match_number += 1
 
-                        p_home1 = player_map.get(tds[0 + step].text.strip(), None)
-                        p_away1 = player_map.get(tds[2 + step].text.strip(), None)
+                        p_home1 = player_map.get(
+                            self._sanitize_player_names(tds[0 + step].text.strip()),
+                            None,
+                        )
+                        p_away1 = player_map.get(
+                            self._sanitize_player_names(tds[2 + step].text.strip()),
+                            None,
+                        )
                         result = tds[3 + step].text.strip()
 
                         # if invalid player name skip the match data
                         opponents_single = (p_home1, p_away1)
-                        if any(opponents_single) is None:
+                        if any(s is None for s in opponents_single):
+                            continue
+                        if any(
+                            s in Extractor.players_to_remove for s in opponents_single
+                        ):
                             continue
                         # sanitize player name abbreviations
-                        p_home1, p_away1 = Extractor._sanitize_player_names(
-                            opponents_single
+                        p_home1, p_away1 = cast(
+                            tuple,
+                            Extractor._sanitize_player_names(opponents_single),
                         )
 
                         sets_home, sets_away, who_won = self._check_who_won(result)
 
                         matches_list.append(
                             {
-                                "match_number": str(match_number),
+                                "match_number": match_number,
                                 "match_type": "single",
                                 "who_won": who_won,
                                 "p_home1": p_home1,
@@ -270,7 +371,6 @@ class Extractor:
         return sets_home, sets_away, who_won
 
     def _extract_matchday_metadata(self):
-        match_data = {}
         division_name, division_region = self._extract_match_division()
         division_region = self._sanitize_division_name(division_region)
         possible_divisions = {
@@ -287,7 +387,9 @@ class Extractor:
             self._sanitize_team_name(home_team),
             self._sanitize_team_name(away_team),
         )
-        match_data["meta"] = {
+        association_home_team = self._infer_association(home_team)
+        association_away_team = self._infer_association(away_team)
+        meta = {
             "division_name": division_name,
             "division_region": division_region,
             "division_hierarchy": division_hierarchy,
@@ -295,19 +397,19 @@ class Extractor:
             "matchdate": matchdate,
             "home_team": home_team,
             "away_team": away_team,
+            "association_home_team": association_home_team,
+            "association_away_team": association_away_team,
         }
-        for key, value in match_data["meta"].items():
-            self._logger.info(f"{key}: {value}")
-        return match_data
+        return meta
 
     def _extract_match_division(self) -> tuple[str, str]:
         if self.heading1:
-            division = re.search(r"(.*?)(?=\s*Spieltag)", self.heading1.text)
+            division = re.search(r"(.*?)(?=\s*Spieltag)", self.heading1.text.strip())
             if division:
                 pattern = (
                     r"\b(?P<division>Landesliga|Verbandsliga|Bezirksliga|Kreisliga)"
                     r"\b(?:\s+(?P<region>Gruppe\s[A-D]|(?:Bayern|Nord|Süd|West|Ost)"
-                    r"(?:[-]?(?:[A-Za-z]+))?(?:\s+[12])?))\s*(?!\d{4})"
+                    r"(?:[-]?(?:[A-Za-z]+))?(?:\s+[12])?))?"
                 )
                 match = re.search(pattern, division.group(1).strip())
                 if match:
@@ -338,7 +440,7 @@ class Extractor:
             return (home_team, away_team)
         raise ElementNotFound("No team names found in <h1>-tag.")
 
-    def _extract_DTFB_player_information(
+    def extract_DTFB_player_information(
         self, player_html: BeautifulSoup, player_name: str
     ) -> dict[str, str | None]:
         tables = player_html.find_all("table")
@@ -350,7 +452,6 @@ class Extractor:
         player_info = {
             "player_name": player_name,
             "category": None,
-            "organisation": "Bayerischer Tischfußballverband BTFV",  # Always the same
             "national_id": None,
             "international_id": None,
             "license": None,
@@ -378,3 +479,23 @@ class Extractor:
             self._logger.info(f"{key}: {value}")
 
         return player_info
+
+    def _infer_association(self, team_name: str) -> str:
+        """Infers the association name from a team name mapping.
+
+        Parameters:
+            team_name (str): The name of the team to infer the association for.
+            keyword_to_association (Dict[str, str]): A mapping of keywords to
+                                                     association names.
+
+        Returns:
+            Optional[str]: The name of the inferred association, or None if
+                           no match is found.
+        """
+        team_name_lower = team_name.lower()
+
+        for keyword, association in Extractor.keyword_to_association.items():
+            if keyword.lower() in team_name_lower:
+                return association
+        # if not mapped use team_name for association name
+        return team_name

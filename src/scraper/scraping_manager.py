@@ -3,9 +3,13 @@ from logging import Logger
 
 from bs4 import BeautifulSoup
 
+from scraper.db_populator import DbPopulator
 from scraper.extractor import Extractor
+from scraper.file_handler import FileHandler
 from scraper.scraper import PlayerScraper, Scraper
+from shared.config import settings
 from shared.config.settings import Settings
+from shared.database.database import Database
 
 
 class ScrapingManager:
@@ -16,12 +20,19 @@ class ScrapingManager:
         scraper: Scraper,
         player_scraper: PlayerScraper,
         extractor: Extractor,
+        db_populator: DbPopulator,
+        database: Database,
+        file_handler: FileHandler,
     ) -> None:
         self.logger = logger
         self.settings = settings
         self.scraper = scraper
         self.player_scraper = player_scraper
         self.extractor = extractor
+        self.db_populator = db_populator
+        self.database = database
+        self.file_handler = file_handler
+        self.player_scraper = player_scraper
         self._generate_starting_url()
 
     def _generate_starting_url(self) -> list[str]:
@@ -103,13 +114,17 @@ class ScrapingManager:
             sorted_match_reports = self._sort_match_reports(match_report_data)
             new_match_report_data_by_season[season] = sorted_match_reports
 
-        self._log_and_extract_data(new_match_report_data_by_season)
+        self.extract_data_and_populate_db(new_match_report_data_by_season)
 
     def process_season(self, season: int) -> None:
         """Convenience function: Process one season."""
         pass
 
-    def _log_and_extract_data(
+    def populate_db(self, html: BeautifulSoup, season: int, page_id: int) -> None:
+        self.database.init_db()
+        self.db_populator.populate(page_id=page_id, html=html)
+
+    def extract_data_and_populate_db(
         self,
         new_match_report_data_by_season: dict[int, list[tuple[int, BeautifulSoup]]],
     ) -> None:
@@ -122,6 +137,41 @@ class ScrapingManager:
             for season, tuple_list in new_match_report_data_by_season.items():
                 self.logger.info(f"{season}: {len(tuple_list)} match reports.")
                 for page_id, html in tuple_list:
-                    self.extractor.extract_data(season, page_id, html)
+                    self.db_populator.populate(page_id, html)
         else:
             self.logger.info("No new match reports found.")
+
+    def populate_with_all_available_cached_data(self) -> None:
+        # new_match_report_data_by_season: dict[int, list[tuple[int, BeautifulSoup]]],
+        self.database.init_db()
+        file_paths = self.file_handler.get_all_cached_match_reports()
+        self.logger.info(
+            "Sorting the file path list by date. This might take a while..."
+        )
+        file_paths = sorted(
+            file_paths,
+            key=lambda filepath: self.extractor.extract_date(
+                BeautifulSoup(filepath.read_text(encoding="utf-8"), "html.parser")
+            ),
+        )
+        for file_path in file_paths:
+            page_id = self.file_handler.extract_page_id_from_path(file_path=file_path)
+            html = self.file_handler.read_HTML(file_path=file_path)
+            self.db_populator.populate(page_id=page_id, html=html)
+
+    def populate_by_page_id(self, page_id) -> None:
+        # convenient function for debugging a particular match report
+        path = settings.settings.RAW_HTML_PATH / f"spielbericht_{page_id}.html"
+        html = self.file_handler.read_HTML(path)
+        self.db_populator.populate(page_id=page_id, html=html)
+
+    def get_all_player_html(self) -> None:
+        file_paths = self.file_handler.get_all_cached_match_reports()
+        for file_path in file_paths:
+            page_id = self.file_handler.extract_page_id_from_path(file_path=file_path)
+            html = self.file_handler.read_HTML(file_path=file_path)
+            self.extractor.extract_data(page_id=page_id, html=html)
+            for player_name in (
+                self.extractor.away_players + self.extractor.away_players
+            ):
+                self.player_scraper.get_player_html(player_name=player_name)
