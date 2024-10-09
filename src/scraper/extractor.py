@@ -18,6 +18,7 @@ class Extractor:
             "Allgäukickers": "Allgäukickers",
             "Aschbach": "FK Aschbach",
             "Augsburg": "Soccer Connection Augsburg",
+            "Bistro Avus": "TFC Bistro Avus Weidhausen",
             "Bamberg": "TFC Bamberg",
             "Bayreuth": "Soccer Club Foosion Bayreuth",
             "Burgheim": "Speed Ball Team Burgheim",
@@ -413,6 +414,12 @@ class Extractor:
                 )
                 match = re.search(pattern, division.group(1).strip())
                 if match:
+                    if (
+                        match.group("division") == "Bezirksliga"
+                        and match.group("region") is None
+                    ):
+                        # One exception in Bezirksliga 2016: Only region is "Bayern"
+                        return match.group("division"), "Bayern"
                     return match.group("division"), match.group("region")
         raise ElementNotFound("No division name in <h1>-tag.")
 
