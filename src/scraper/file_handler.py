@@ -68,6 +68,11 @@ class FileHandler:
         directory_path = Path(f"{self._settings.PLAYER_HTML_PATH}/{player_hash}.html")
         return directory_path
 
+    def generate_path_for_player_image(self, player_name: str) -> Path:
+        player_hash = self.generate_hash(string=player_name)
+        directory_path = Path(f"{self._settings.PLAYER_HTML_PATH}/{player_hash}.jpg")
+        return directory_path
+
     def generate_hash(self, string: str) -> str:
         # Normalize player name by stripping extra spaces and converting to lowercase
         normalized_name = string.strip().lower()
