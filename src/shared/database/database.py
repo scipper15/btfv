@@ -32,9 +32,9 @@ class Database:
         BaseModel.metadata.drop_all(self.sync_engine)
         BaseModel.metadata.create_all(self.sync_engine)
 
-    def get_sync_session(self) -> sessionmaker[Session]:
+    def get_sync_session(self) -> Session:
         """Provide a transactional scope around a series of operations for sync."""
-        return sessionmaker(self.sync_engine)
+        return self.SyncSessionLocal()
 
     async def get_async_session(self) -> async_sessionmaker[AsyncSession]:
         """Provide a transactional scope around a series of operations for async."""
