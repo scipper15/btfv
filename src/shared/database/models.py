@@ -127,6 +127,9 @@ class TeamMembership(BaseModel):
     season_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("seasons.id"), primary_key=True
     )
+    is_borrowed: Mapped[bool] = mapped_column(
+        default=False, nullable=False, server_default="false"
+    )  # Track if the player is being borrowed
 
     # Relationships
     player: Mapped["Player"] = relationship(
@@ -154,11 +157,28 @@ class Player(BaseModel):
         nullable=True,
         index=True,
     )
-    current_mu: Mapped[float] = mapped_column(Float, nullable=False, index=True)
-    current_sigma: Mapped[float] = mapped_column(Float, nullable=False, index=True)
+    # Combined rating
+    current_mu_combined: Mapped[float] = mapped_column(
+        Float, nullable=False, index=True
+    )
+    current_sigma_combined: Mapped[float] = mapped_column(
+        Float, nullable=False, index=True
+    )
+    # Singles-only rating
+    current_mu_singles: Mapped[float] = mapped_column(Float, nullable=False, index=True)
+    current_sigma_singles: Mapped[float] = mapped_column(
+        Float, nullable=False, index=True
+    )
+    # Doubles-only rating
+    current_mu_doubles: Mapped[float] = mapped_column(Float, nullable=False, index=True)
+    current_sigma_doubles: Mapped[float] = mapped_column(
+        Float, nullable=False, index=True
+    )
+
     national_id: Mapped[str | None] = mapped_column(String, nullable=True)
     international_id: Mapped[str | None] = mapped_column(String, nullable=True)
     DTFB_from_id: Mapped[str | None] = mapped_column(Integer, nullable=True)
+    image_file_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     # Relationships
     team_memberships: Mapped[List["TeamMembership"]] = relationship(
@@ -174,7 +194,15 @@ class Player(BaseModel):
         init=False,
     )
 
-    __table_args__ = (Index("ix_players_name_mu", "name", "current_mu"),)
+    __table_args__ = (
+        Index(
+            "ix_players_name_mu_combined_singles_doubles",  # Index name
+            "name",
+            "current_mu_combined",
+            "current_mu_singles",
+            "current_mu_doubles",
+        ),
+    )
 
 
 class Team(BaseModel):
