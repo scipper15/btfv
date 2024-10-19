@@ -33,6 +33,10 @@ loggers:
     level: DEBUG
     handlers: [console]
     propagate: False
+  webapp:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
   scrapingmanager:
     level: DEBUG
     handlers: [console]

@@ -50,7 +50,7 @@ class Scraper:
             self._logger.debug("Page type 'spielbericht': File already cached.")
             return None
 
-    def _get_from_server(self, URL) -> BeautifulSoup:
+    def _get_from_server(self, URL: str) -> BeautifulSoup:
         self._logger.info(f"HTML from server: {URL}")
         r = requests.get(URL)
         r.raise_for_status()
@@ -70,7 +70,7 @@ class PlayerScraper:
 
     def get_player_html(self, player_name: str) -> BeautifulSoup | int | None:
         """Returns html (from url or if cached from file) or DTFB_from_id or None."""
-        path = self._file_handler.generate_path_for_player(player_name=player_name)
+        path = self._file_handler.generate_path_for_player_html(player_name=player_name)
         if not self._file_handler.exists(path):
             # file does not exist, but player information might not be available online
             already_tried = self._already_tried(player_name=player_name)
@@ -146,7 +146,7 @@ class PlayerScraper:
                                 "player_hash": self._file_handler.generate_hash(
                                     player_name
                                 ),
-                                "DTFB_from_id": DTFB_from_id,
+                                "DTFB_from_id": cast(str, DTFB_from_id),
                                 "player_name": player_name,
                             },
                         )
@@ -170,7 +170,7 @@ class PlayerScraper:
         # look up player hash / player name and if a DTFB ID already has been cached
         for row in player_data:
             if row["player_hash"] == player_hash:
-                # means already tried to scrape
+                # lookup in csv: means already tried to scrape this particular player
                 if row["DTFB_from_id"]:
                     # successfully tried to retrieve player before
                     return int(row["DTFB_from_id"])
@@ -196,7 +196,9 @@ class PlayerScraper:
                 return
             response = requests.get(image_url)  # type: ignore
             response.raise_for_status()
-            self._file_handler.write_image(response, player_name)
+            self._file_handler.write_image(
+                response=response, name=player_name, page_type="player"
+            )
 
         else:
             self._logger.info("No matching image URL found in HTML.")

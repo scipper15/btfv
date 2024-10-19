@@ -121,7 +121,6 @@ class ScrapingManager:
         pass
 
     def populate_db(self, html: BeautifulSoup, season: int, page_id: int) -> None:
-        self.database.init_db()
         self.db_populator.populate(page_id=page_id, html=html)
 
     def extract_data_and_populate_db(
@@ -159,9 +158,9 @@ class ScrapingManager:
             html = self.file_handler.read_HTML(file_path=file_path)
             self.db_populator.populate(page_id=page_id, html=html)
 
-    def populate_by_page_id(self, page_id) -> None:
+    def populate_by_page_id(self, page_id: int) -> None:
         # convenient function for debugging a particular match report
-        path = settings.settings.RAW_HTML_PATH / f"spielbericht_{page_id}.html"
+        path = settings.settings.MATCH_REPORT_HTML_PATH / f"spielbericht_{page_id}.html"
         html = self.file_handler.read_HTML(path)
         self.db_populator.populate(page_id=page_id, html=html)
 
