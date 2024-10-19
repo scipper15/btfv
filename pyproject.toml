@@ -15,9 +15,10 @@ sqlalchemy = "^2.0.35"
 psycopg2-binary = "^2.9.9"
 asyncpg = "^0.29.0"
 trueskill = "^0.4.5"
-matplotlib = "^3.9.2"
 scipy = "^1.14.1"
-seaborn = "^0.13.2"
+jinja2 = "^3.1.4"
+streamlit = "^1.38.0"
+flask = "^3.0.3"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -27,7 +28,6 @@ ruff = "^0.6.6"
 types-requests = "^2.32.0.20240914"
 types-beautifulsoup4 = "^4.12.0.20240907"
 types-pyyaml = "^6.0.12.20240917"
-vulture = "^2.12"
 types-seaborn = "^0.13.2.20240820"
 
 [build-system]
@@ -36,8 +36,23 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.mypy]
-mypy_path="src"
+mypy_path = "src"
+plugins = [
+    "pydantic.mypy"
+]
+follow_imports = "silent"
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_reexport = true
 
+disallow_untyped_defs = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
 
 [tool.ruff]
 target-version = "py312"

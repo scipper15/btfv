@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import List
 import uuid
 
 from sqlalchemy import (
@@ -106,6 +106,7 @@ class Association(BaseModel):
         unique=True,
         nullable=False,
     )
+    logo_file_name: Mapped[str] = mapped_column(String, nullable=False)
 
     # Relationships
     organisation: Mapped["Organisation"] = relationship(
@@ -149,7 +150,7 @@ class Player(BaseModel):
     __tablename__ = "players"
 
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
-    birth_name: Mapped[Optional[str]] = mapped_column(
+    birth_name: Mapped[str | None] = mapped_column(
         String, unique=True, nullable=True, index=True, init=False
     )
     category: Mapped[PlayerCategory | None] = mapped_column(
@@ -177,8 +178,8 @@ class Player(BaseModel):
 
     national_id: Mapped[str | None] = mapped_column(String, nullable=True)
     international_id: Mapped[str | None] = mapped_column(String, nullable=True)
-    DTFB_from_id: Mapped[str | None] = mapped_column(Integer, nullable=True)
-    image_file_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    DTFB_from_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    image_file_name: Mapped[str | None] = mapped_column(String, nullable=True)
 
     # Relationships
     team_memberships: Mapped[List["TeamMembership"]] = relationship(
@@ -376,10 +377,20 @@ class MatchParticipant(BaseModel):
     team_side: Mapped[str] = mapped_column(String, nullable=False)  # 'home' or 'away'
 
     # Player's rating before and after the match
-    mu_before: Mapped[float] = mapped_column(Float, nullable=False)
-    sigma_before: Mapped[float] = mapped_column(Float, nullable=False)
-    mu_after: Mapped[float] = mapped_column(Float, nullable=False)
-    sigma_after: Mapped[float] = mapped_column(Float, nullable=False)
+    mu_before_combined: Mapped[float] = mapped_column(Float, nullable=False)
+    sigma_before_combined: Mapped[float] = mapped_column(Float, nullable=False)
+    mu_after_combined: Mapped[float] = mapped_column(Float, nullable=False)
+    sigma_after_combined: Mapped[float] = mapped_column(Float, nullable=False)
+
+    mu_before_singles: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sigma_before_singles: Mapped[float | None] = mapped_column(Float, nullable=True)
+    mu_after_singles: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sigma_after_singles: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    mu_before_doubles: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sigma_before_doubles: Mapped[float | None] = mapped_column(Float, nullable=True)
+    mu_after_doubles: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sigma_after_doubles: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # Relationships
     match: Mapped["Match"] = relationship(

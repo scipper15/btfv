@@ -14,8 +14,8 @@ class Extractor:
     keyword_to_association = MappingProxyType(
         {
             "Aichach": "Speed Ball Team Aichach",
-            "Allgäu": "TFC Allgäu",
             "Allgäukickers": "Allgäukickers",
+            "Allgäu": "TFC Allgäu",
             "Aschbach": "FK Aschbach",
             "Augsburg": "Soccer Connection Augsburg",
             "Bistro Avus": "TFC Bistro Avus Weidhausen",
@@ -142,18 +142,18 @@ class Extractor:
         self._logger = logger
         self._settings = settings
 
-    def extract_date(self, html) -> datetime:
-        small = html.find("small").text.strip()
+    def extract_date(self, html: BeautifulSoup) -> datetime:
+        small = html.find("small")
         if small:
-            date_match = re.search(r"\d{2}.\d{2}.\d{4}", small)
+            date_match = re.search(r"\d{2}.\d{2}.\d{4}", small.text.strip())
             if date_match:
                 return datetime.strptime(date_match.group(), "%d.%m.%Y")
         raise ElementNotFound("No 'Date' found in <small> tag.")
 
-    def extract_season_year(self, html) -> int:
-        small = html.find("small").text.strip()
+    def extract_season_year(self, html: BeautifulSoup) -> int:
+        small = html.find("small")
         if small:
-            date_match = re.search(r"\d{2}.\d{2}.\d{4}", small)
+            date_match = re.search(r"\d{2}.\d{2}.\d{4}", small.text.strip())
             if date_match:
                 return datetime.strptime(date_match.group(), "%d.%m.%Y").year
         raise ElementNotFound("No 'Date' found in <small> tag.")
@@ -173,7 +173,7 @@ class Extractor:
     def extract_page_id_from_url(self, url: str) -> int:
         return int(url.split("/")[-2])
 
-    def extract_data(self, page_id: int, html: BeautifulSoup):
+    def extract_data(self, page_id: int, html: BeautifulSoup) -> None:
         self.season = self.extract_season_year(html=html)
         self.page_id = page_id
         self.html = html
@@ -197,14 +197,14 @@ class Extractor:
         rows = tables[idx].find("tbody").find_all("tr")
         player_names = [row.find_all("td")[1].get_text(strip=True) for row in rows]
         player_names = cast(
-            list, Extractor._sanitize_player_names(player_names=player_names)
+            list[str], Extractor._sanitize_player_names(player_names=player_names)
         )
         return player_names
 
     @staticmethod
     def _sanitize_player_names(
         player_names: list[Any] | tuple[Any, ...] | str,
-    ) -> list[str] | tuple | str:
+    ) -> list[str] | tuple[str] | str:
         if isinstance(player_names, list):
             return [
                 Extractor.player_name_sanitizer.get(player_name, player_name)
@@ -228,7 +228,7 @@ class Extractor:
         team_name = team_name.replace("Muenchen", "München")
         return team_name
 
-    def _create_player_map(self, players: list) -> dict[str, str]:
+    def _create_player_map(self, players: list[str]) -> dict[str, str]:
         player_map: dict[str, str] = {}
         for player in players:
             # abbreviate player name
@@ -247,7 +247,9 @@ class Extractor:
             player_map = player_map | {player_abbr: player}
         return player_map
 
-    def _extract_matches(self, player_map) -> list[dict[str, str | int]]:  # noqa
+    def _extract_matches(  # noqa: C901
+        self, player_map: dict[str, str]
+    ) -> list[dict[str, str | int]]:
         matches_list: list[dict[str, str | int]] = []
         pattern = re.compile(r"(einzel|doppel)")
         tables = self.html.find_all("table", id=pattern)
@@ -264,19 +266,31 @@ class Extractor:
                         match_number += 1
 
                         p_home1 = player_map.get(
-                            self._sanitize_player_names(tds[0 + step].text.strip()),
+                            cast(
+                                str,
+                                self._sanitize_player_names(tds[0 + step].text.strip()),
+                            ),
                             None,
                         )
                         p_away1 = player_map.get(
-                            self._sanitize_player_names(tds[2 + step].text.strip()),
+                            cast(
+                                str,
+                                self._sanitize_player_names(tds[2 + step].text.strip()),
+                            ),
                             None,
                         )
                         p_home2 = player_map.get(
-                            self._sanitize_player_names(tds[4 + step].text.strip()),
+                            cast(
+                                str,
+                                self._sanitize_player_names(tds[4 + step].text.strip()),
+                            ),
                             None,
                         )
                         p_away2 = player_map.get(
-                            self._sanitize_player_names(tds[5 + step].text.strip()),
+                            cast(
+                                str,
+                                self._sanitize_player_names(tds[5 + step].text.strip()),
+                            ),
                             None,
                         )
 
@@ -297,7 +311,8 @@ class Extractor:
                             p_away1,
                             p_away2,
                         ) = cast(
-                            tuple, Extractor._sanitize_player_names(opponents_double)
+                            tuple[str, str, str, str],
+                            Extractor._sanitize_player_names(opponents_double),
                         )
 
                         result = tds[3 + step].text.strip()
@@ -323,11 +338,17 @@ class Extractor:
                         match_number += 1
 
                         p_home1 = player_map.get(
-                            self._sanitize_player_names(tds[0 + step].text.strip()),
+                            cast(
+                                str,
+                                self._sanitize_player_names(tds[0 + step].text.strip()),
+                            ),
                             None,
                         )
                         p_away1 = player_map.get(
-                            self._sanitize_player_names(tds[2 + step].text.strip()),
+                            cast(
+                                str,
+                                self._sanitize_player_names(tds[2 + step].text.strip()),
+                            ),
                             None,
                         )
                         result = tds[3 + step].text.strip()
@@ -342,7 +363,7 @@ class Extractor:
                             continue
                         # sanitize player name abbreviations
                         p_home1, p_away1 = cast(
-                            tuple,
+                            tuple[str, str],
                             Extractor._sanitize_player_names(opponents_single),
                         )
 
@@ -362,7 +383,7 @@ class Extractor:
                         )
         return matches_list
 
-    def _check_who_won(self, result) -> tuple[str, str, str]:
+    def _check_who_won(self, result: str) -> tuple[str, str, str]:
         split_result = result.split(":")
         sets_home, sets_away = split_result[0], split_result[1]
         if sets_home != sets_away:
@@ -371,7 +392,7 @@ class Extractor:
             who_won = "draw"
         return sets_home, sets_away, who_won
 
-    def _extract_matchday_metadata(self):
+    def _extract_matchday_metadata(self) -> dict[str, object]:
         division_name, division_region = self._extract_match_division()
         division_region = self._sanitize_division_name(division_region)
         possible_divisions = {
@@ -425,7 +446,7 @@ class Extractor:
 
     def _extract_match_day(self) -> int:
         if self.heading1:
-            match_day = re.search(r"(?:.)+(?:Spieltag\s*)(\d)*", self.heading1.text)
+            match_day = re.search(r"(?:.)+(?:Spieltag\s*)(\d+)*", self.heading1.text)
             if match_day:
                 return int(match_day.group(1))
         raise ElementNotFound("No matchday in <h1>-tag.")

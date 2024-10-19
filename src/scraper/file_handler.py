@@ -26,7 +26,9 @@ class FileHandler:
             content = file.read()
         return BeautifulSoup(content, "html.parser")
 
-    def append_to_csv(self, file_path: Path, data: dict | None = None):
+    def append_to_csv(
+        self, file_path: Path, data: dict[str, str] | None = None
+    ) -> None:
         file_exists = file_path.exists()
         with open(file_path, mode="a+", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(
@@ -39,10 +41,13 @@ class FileHandler:
                 self._logger.info(f"Written player data to {file_path}")
                 writer.writerow(data)
 
-    def write_image(self, response: Response, player_name: str) -> None:
+    def write_image(self, response: Response, name: str, page_type: str) -> None:
         # Save the image to the output directory
-        file_name = f"{self.generate_hash(string=player_name)}.jpg"
-        image_file_path = self._settings.PLAYER_HTML_PATH / file_name
+        file_name = f"{self.generate_hash(string=name)}.jpg"
+        if page_type == "player":
+            image_file_path = self._settings.PLAYER_IMAGES_PATH / file_name
+        elif page_type == "association":
+            image_file_path = self._settings.ASSOCIATION_LOGOS_PATH / file_name
         with open(image_file_path, "wb") as file:
             file.write(response.content)
 
@@ -61,16 +66,19 @@ class FileHandler:
     def generate_path_from_url(self, URL: str) -> Path:
         page_id = URL.split("/")[-2]
         page_type = URL.split("/")[4]
-        return self._settings.RAW_HTML_PATH / f"{page_type}_{page_id}.html"
+        if page_type in ["saison", "liga", "spielbericht"]:
+            # store these three page types in the same directory
+            return self._settings.MATCH_REPORT_HTML_PATH / f"{page_type}_{page_id}.html"
+        raise NotImplementedError
 
-    def generate_path_for_player(self, player_name: str) -> Path:
+    def generate_path_for_player_html(self, player_name: str) -> Path:
         player_hash = self.generate_hash(string=player_name)
         directory_path = Path(f"{self._settings.PLAYER_HTML_PATH}/{player_hash}.html")
         return directory_path
 
     def generate_path_for_player_image(self, player_name: str) -> Path:
         player_hash = self.generate_hash(string=player_name)
-        directory_path = Path(f"{self._settings.PLAYER_HTML_PATH}/{player_hash}.jpg")
+        directory_path = Path(f"{self._settings.PLAYER_IMAGES_PATH}/{player_hash}.jpg")
         return directory_path
 
     def generate_hash(self, string: str) -> str:
@@ -85,7 +93,7 @@ class FileHandler:
         return True if path.exists() else False
 
     def get_all_cached_match_reports(self) -> list[Path]:
-        path = self._settings.RAW_HTML_PATH
+        path = self._settings.MATCH_REPORT_HTML_PATH
         return list(path.glob("spielbericht_*.html"))
 
     def extract_page_id_from_path(self, file_path: Path) -> int:
