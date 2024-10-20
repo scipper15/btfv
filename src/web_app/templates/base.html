@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BTFV Tablesoccer Rankings{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen flex flex-col bg-gray-100">
+    <div class="container mx-auto max-w-5xl flex-grow px-0">
+        <header
+            class="sticky top-0 header bg-blue-900 text-white sticky w-full flex justify-between items-center p-3 shadow-lg z-10">
+            <div class="flex items-center space-x-2">
+                <a href="{{ url_for('home.home') }}">
+                    <img src="{{ url_for('static', filename='favicon.ico') }}" alt="Ardilla Logo" class="h-12 rounded">
+                </a>
+            </div>
+            <h1 class="text-xl font-bold text-center">BTFV Tablesoccer Rankings</h1>
+
+            <!-- Burger Menu Button for both Mobile and Desktop -->
+            <div class="flex items-center space-x-2">
+                <button id="burger-menu-btn" class="focus:outline-none">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div id="burger-menu-content" class="fixed inset-0 right-0 bg-black bg-opacity-50 z-50 hidden">
+            <div class="bg-white w-64 h-full p-4 shadow-lg">
+                <button id="close-menu-btn" class="text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+                <ul class="mt-6 space-y-4">
+                    <li><a href="{{ url_for('home.home') }}" class="text-gray-900">
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('ranking.show_ranking', year=[2024]) }}" class="text-gray-900">
+                            Players Rankings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Breadcrumb Block -->
+        <div>
+            <nav class="fixed bg-teal-400 text-sm px-3 py-2 z-60 shadow-md z-10" style="width: 1024px">
+                {% block breadcrumb %}
+                {% for crumb in breadcrumbs %}
+                {% if crumb.url %}
+                <a href="{{ crumb.url }}" class="text-blue-600 hover:text-blue-800">{{ crumb.name }}</a>
+                <span class="text-gray-500 mx-0">></span>
+                {% else %}
+                <span class="text-white">{{ crumb.name }}</span>
+                {% endif %}
+                {% endfor %}
+                {% endblock %}
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <main class="py-6 flex flex-col min-h-screen">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Back to Top Button -->
+        <button id="back-to-top"
+            class="fixed bottom-10 right-10 bg-teal-400 text-white p-3 rounded-full shadow-lg opacity-0 transition-opacity duration-300 hidden z-30">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+
+        <!-- Footer -->
+        <footer
+            class="!p-0 sticky container mx-auto max-w-5xl text-xs bg-blue-900 text-center text-teal-400 py-3 mt-auto w-full bottom-0 z-30">
+            <div id="progress-bar" class="!p-0 !m-0 h-1 bg-teal-400 mb-2 space-y-0"></div>
+            <p class="!pb-1">2024 Martin-Reinhard Eichhorn, BTFV Tablesoccer Rankings</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/back-to-top.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/scroll-progress.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/menu.js') }}"></script> <!-- Include the JS for the menu -->
+</body>
+
+</html>

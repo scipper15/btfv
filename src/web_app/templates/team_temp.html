@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Team Members{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-12">
+    <!-- Team Header -->
+    <div class="text-center mb-12">
+        <img src="{{ url_for('static', filename='team-logo.png') }}" alt="Team Logo"
+            class="mx-auto w-40 h-40 mb-4 rounded-full object-cover shadow-lg">
+        <h1 class="text-4xl font-bold text-gray-800">{{ members.team_name }}</h1>
+        <p class="text-lg text-gray-500 mt-2">Division: {{ members.division_name.value }}</p>
+    </div>
+
+    <!-- Player Cards Section -->
+    <div class="flex flex-wrap justify-center gap-6">
+        {% for member in members.team_members %}
+        <!-- Header: Player and Team Info -->
+        <section class="bg-white p-6 shadow-md rounded-lg border-b pb-6">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
+
+                <!-- Player Info -->
+                <div class="flex items-center space-x-6">
+                    <img src="{{ url_for('static', filename='player_images/' + member.image_file_name) }}"
+                        alt="Player Photo" class="h-32 w-32 rounded-full border-4 border-gray-200 shadow-lg">
+                    <div>
+                        <h1 class="text-4xl font-extrabold text-gray-800">{{ member.name }}</h1>
+                        <p class="text-lg font-semibold text-blue-600">Category: {{ member.category.value }}</p>
+                        {% if member.national_id %}
+                        <p class="hidden md:block text-sm text-gray-600">National Player-ID: {{ members.national_id }}
+                        </p>
+                        {% endif %}
+                        {% if member.international_id %}
+                        <p class="hidden md:block text-sm text-gray-600">International Player-ID: {{
+                            member.international_id }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Player Rating -->
+                <div class="text-center">
+                    <span class="text-5xl font-extrabold text-green-600">{{ "%.2f" |
+                        format(member.current_mu_combined - 3 * member.current_sigma_combined) }}</span>
+                    <p class="text-sm text-gray-500 mt-1">
+                        &mu;={{ "%.2f" | format(member.current_mu_combined) }} | &sigma;={{ "%.2f" |
+                        format(member.current_sigma_combined) }}
+                    </p>
+                </div>
+
+                <!-- Division and Season Info -->
+                <div class="text-center md:text-left">
+                    <p class="hidden md:block text-sm text-gray-600">
+                        Last played match: last_played_match_date.strftime('%d.%m.%Y')
+                    </p>
+                </div>
+
+            </div>
+        </section>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

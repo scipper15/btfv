@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+<!-- The last breadcrumb is the page title -->
+{% block title %} Player {{ breadcrumbs[-1].name }} {% endblock %}
+
+{% block content %}
+
+{% include 'partials/filter.html' %}
+
+{% include 'partials/player_header.html' %}
+<!-- Matches Section -->
+<section class="mt-6">
+  <table id="main-table" class="bg-white min-w-full text-left w-auto table-fixed">
+    <tbody>
+      {% set last_match_date = None %}
+      {% for match in matches %}
+
+      <!-- Check for new match day and display team names row -->
+      <!-- Desktop View -->
+      {% if loop.index0 == 0 or match.date.strftime('%Y-%m-%d') != matches[loop.index0 -
+      1].date.strftime('%Y-%m-%d') %}
+      <tr class="bg-gray-300 text-gray-600 sticky z-20 top-[108px] hidden md:table-row">
+        <td colspan="2" class="data-col px-2 py-3 text-left font-bold">
+          <a href="{{ url_for('team.team', team_id=match.home_team_id) }}">{{ match.home_team_name }}</a>
+        </td>
+        <td colspan="1" class="px-2 py-3 text-center font-bold">
+          <a href="https://btfv.de/sportdirector/spielbericht/anzeigen/{{ match.BTFV_from_id }}/no_frame/"
+            target="_blank">
+            {{ match.date.strftime('%d.%m.%Y') }} | Day: {{ match.match_day_nr }}
+          </a>
+        </td>
+        <td colspan="2" class="data-col px-2 py-3 text-right font-bold">
+          <a href="{{ url_for('team.team', team_id=match.away_team_id) }}">{{ match.away_team_name }}</a>
+        </td>
+      </tr>
+      <!-- Mobile view -->
+      <tr class="bg-gray-300 text-gray-600 sticky z-20 top-16 md:hidden">
+        <td colspan="1" class="data-col px-2 py-3 text-left font-bold">
+          <a href="{{ url_for('team.team', team_id=match.home_team_id) }}">{{ match.home_team_name }}</a>
+        </td>
+        <td colspan="1" class="px-2 py-3 text-center font-bold">
+          <a href="https://btfv.de/sportdirector/spielbericht/anzeigen/{{ match.BTFV_from_id }}/no_frame/"
+            target="_blank">
+            {{ match.date.strftime('%d.%m.%Y') }} | Day: {{ match.match_day_nr }}
+          </a>
+        </td>
+        <td colspan="1" class="data-col px-2 py-3 text-right font-bold">
+          <a href="{{ url_for('team.team', team_id=match.away_team_id) }}">{{ match.away_team_name }}</a>
+        </td>
+      </tr>
+      {% endif %}
+
+      <tr class="even:bg-gray-200">
+        <!-- Home Players Profile Pics -->
+        <td class="px-3 py-3 hidden md:block">
+          {% if match.home_teammate_name %}
+          <!-- Doubles match with two home players -->
+          <div class="flex flex-col -space-y-5">
+            <a href="{{ url_for('player.player', player_id=match.home_player_id) }}">
+              <img src="{{ url_for('static', filename='player_images/' + match.home_player_image) }}"
+                alt="Player 1 Photo" class="h-20 w-20 rounded-full border border-gray-300">
+            </a>
+            <a href="{{ url_for('player.player', player_id=match.home_teammate_id) }}">
+              <img src="{{ url_for('static', filename='player_images/' + match.home_teammate_image) }}"
+                alt="Player 2 Photo" class="h-20 w-20 rounded-full border border-gray-300">
+            </a>
+          </div>
+          {% else %}
+          <!-- Singles match with one home player -->
+          <div class="flex">
+            <a href="{{ url_for('player.player', player_id=match.home_player_id) }}">
+              <img src="{{ url_for('static', filename='player_images/' + match.home_player_image) }}"
+                alt="Player 1 Photo" class="h-20 w-20 rounded-full border border-gray-300">
+            </a>
+          </div>
+          {% endif %}
+        </td>
+
+        <!-- Home Team Details -->
+        <td class="data-col px-2 py-3 {% if match.who_won == 'home' %}text-green-600{% else %}text-red-600{% endif %}">
+          <!-- Away Player Name 1 -->
+          <p class="text-sm font-bold text-gray-500">
+            <a href="{{ url_for('player.player', player_id=match.home_player_id) }}">{{ match.home_player_name }}</a>
+          </p>
+
+          <!-- Away Player mu 1 -->
+          <p
+            class="text-sm font-bold {% if (match.home_mu_after - 3 * match.home_sigma_after - (match.home_mu_before - 3 * match.home_sigma_before)) > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+            &Delta;&nbsp;{{ "%+.2f"|format(match.home_mu_after - 3 * match.home_sigma_after -
+            (match.home_mu_before - 3 * match.home_sigma_before)) }}:&nbsp;<span
+              class="text-sm font-normal text-gray-500">{{ "%.2f"|format(match.confident_home_mu_before)
+              }}&#8594;{{
+              "%.2f"|format(match.confident_home_mu_after) }}</span>
+          </p>
+
+          <!-- Away Player Name 2 -->
+          {% if match.home_teammate_name %}
+          <p class="text-sm font-bold text-gray-500">
+            <a href="{{ url_for('player.player', player_id=match.home_teammate_id) }}">{{ match.home_teammate_name
+              }}</a>
+          </p>
+
+          <!-- Away Player mu 2 -->
+          <p
+            class="text-sm font-bold {% if (match.home_teammate_mu_after - 3 * match.home_teammate_sigma_after - (match.home_teammate_mu_before - 3 * match.home_teammate_sigma_before)) > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+            &Delta;&nbsp;{{ "%+.2f"|format(match.home_teammate_mu_after - 3 * match.home_teammate_sigma_after -
+            (match.home_teammate_mu_before - 3 * match.home_teammate_sigma_before)) }}:&nbsp;<span
+              class="text-sm font-normal text-gray-500">{{
+              "%.2f"|format(match.confident_home_teammate_mu_before) }}&#8594;{{
+              "%.2f"|format(match.confident_home_teammate_mu_after) }}
+            </span>
+          </p>
+          {% endif %}
+        </td>
+
+        <!-- Middle Section -->
+        <td class="px-2 py-3 text-center font-bold text-gray-600 align-middle">
+          <div class="text-sm text-gray-500">
+            #{{ match.global_match_nr }}&nbsp;|&nbsp;Match&nbsp;{{ match.match_nr }}
+          </div>
+          <span class="text-xl md:text-5xl">{{ match.sets_home }}&nbsp;:&nbsp;{{ match.sets_away }}</span>
+          <div class="hidden md:block">
+            <span class="text-xl">{{ match.match_type }}</span>
+          </div>
+        </td>
+
+        <!-- Away Team Details -->
+        <td class="data-col px-2 py-3 {% if match.who_won == 'away' %}text-green-600{% else %}text-red-600{% endif %}">
+          <!-- Away Player Name 1 -->
+          <p class="text-sm font-bold text-gray-500 text-right">
+            <a href="{{ url_for('player.player', player_id=match.away_player_id) }}">{{ match.away_player_name }}</a>
+          </p>
+
+          <!-- Away Player mu 1 -->
+          <p class="text-sm font-bold text-right">
+            <span class="text-sm font-normal text-gray-500">
+              {{ "%.2f"|format(match.confident_away_mu_before) }}&#8594;{{
+              "%.2f"|format(match.confident_away_mu_after) }}:</span>&nbsp;<span class="{% if (match.away_mu_after - 3
+                          * match.away_sigma_after - (match.away_mu_before - 3 * match.away_sigma_before))> 0
+                          %}text-green-600{% else %}text-red-600{% endif %}">&Delta;&nbsp;{{
+              " %+.2f"|format(match.away_mu_after - 3 * match.away_sigma_after - (match.away_mu_before - 3 *
+              match.away_sigma_before)) }}</span>
+          </p>
+
+          {% if match.away_teammate_name %}
+          <!-- Away Player Name 2 -->
+          <p class="text-sm font-bold text-gray-500 text-right">
+            <a href="{{ url_for('player.player', player_id=match.away_teammate_id) }}">{{ match.away_teammate_name
+              }}</a>
+          </p>
+
+          <!-- Away Player mu 2 -->
+          <p class="text-sm font-bold text-right">
+            <span class="text-sm font-normal text-gray-500">
+              {{ "%.2f"|format(match.confident_away_teammate_mu_before) }}&#8594;{{
+              "%.2f"|format(match.confident_away_teammate_mu_after) }}:</span>&nbsp;<span
+              class=" {% if (match.away_teammate_mu_after - 3 * match.away_teammate_sigma_after - (match.away_teammate_mu_before - 3 * match.away_teammate_sigma_before)) > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+              &Delta;&nbsp;{{ "%+.2f" |format(match.away_teammate_mu_after - 3 *
+              match.away_teammate_sigma_after -
+              (match.away_teammate_mu_before - 3 * match.away_teammate_sigma_before)) }}</span>
+          </p>
+          {% endif %}
+        </td>
+
+        <!-- Away Players Profile Pics -->
+        <td class="px-3 py-3 hidden md:block">
+          {% if match.away_teammate_name %}
+          <!-- Doubles match with two away players -->
+          <div class="flex flex-col -space-y-5">
+            <a href="{{ url_for('player.player', player_id=match.away_player_id) }}">
+              <img src="{{ url_for('static', filename='player_images/' + match.away_player_image) }}"
+                alt="Opponent 1 Photo" class="h-20 w-20 rounded-full border border-gray-300">
+            </a>
+            <a href="{{ url_for('player.player', player_id=match.away_teammate_id) }}">
+              <img src="{{ url_for('static', filename='player_images/' + match.away_teammate_image) }}"
+                alt="Opponent 2 Photo" class="h-20 w-20 rounded-full border border-gray-300">
+            </a>
+          </div>
+          {% else %}
+          <!-- Singles match with one away player -->
+          <div class="flex">
+            <a href="{{ url_for('player.player', player_id=match.away_player_id) }}">
+              <img src="{{ url_for('static', filename='player_images/' + match.away_player_image) }}"
+                alt="Opponent 1 Photo" class="h-20 w-20 rounded-full border border-gray-300">
+            </a>
+          </div>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+</div>
+{% endblock %}

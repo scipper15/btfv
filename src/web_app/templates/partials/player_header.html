@@ -1,0 +1,53 @@
+<!-- Header: Player and Team Info -->
+<section class="bg-white p-6 shadow-md rounded-lg border-b pb-6">
+    <div class="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
+
+        <!-- Player Info -->
+        <div class="flex items-center space-x-6">
+            <img src="{{ url_for('static', filename='player_images/' + player.image_file_name) }}" alt="Player Photo"
+                class="h-32 w-32 rounded-full border-4 border-gray-200 shadow-lg">
+            <div>
+                <h1 class="text-4xl font-extrabold text-gray-800">{{ player.name }}</h1>
+                <p class="text-lg font-semibold text-blue-600">Category: {{ player.category.value }}</p>
+                {% if player.national_id %}
+                <p class="hidden md:block text-sm text-gray-600">National Player-ID: {{ player.national_id }}</p>
+                {% endif %}
+                {% if player.international_id %}
+                <p class="hidden md:block text-sm text-gray-600">International Player-ID: {{ player.international_id }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Player Rating -->
+        <div class="text-center">
+            <span class="text-5xl font-extrabold text-green-600">{{ "%.2f" |
+                format(player.mu_confident) }}</span>
+            <p class="text-sm text-gray-500 mt-1">
+                &mu;={{ "%.2f" | format(player.mu_after_combined) }} | &sigma;={{ "%.2f" |
+                format(player.sigma_after_combined) }}
+            </p>
+        </div>
+
+        <!-- Division and Season Info -->
+        <div class="text-center md:text-left">
+            <p class="hidden md:block text-md font-bold text-gray-600">
+                {{player_info.division_name.value }} {{ player_info.region }}
+            </p>
+            <p class="hidden md:block text-sm text-gray-600">
+                {% if player_info.season_year != current_season %}
+                Played for: {{ player_info.team_name }}
+                <br />Last played match: {{ last_played_match_date.strftime('%d.%m.%Y')}}
+                {% else %}
+                {{ player_info.team_name }}
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Team Logo -->
+        <div class="hidden md:block">
+            <img src="{{ url_for('static', filename='logos/' + player_info.logo_file_name) }}" alt="Association Logo"
+                class="h-32 w-32 rounded border-4 border-gray-200 shadow-lg">
+        </div>
+    </div>
+</section>

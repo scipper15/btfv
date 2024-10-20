@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Player Ranking{% endblock %}
+
+{% block content %}
+<div class="text-center">
+  <h1 class="text-4xl font-bold text-red-600">404</h1>
+  <p class="mt-4 text-lg text-gray-700">{{ message }}</p>
+  <a href="{{ url_for('home.home') }}" class="mt-6 inline-block px-4 py-2 bg-blue-500 text-white rounded">
+    Go to MainPage
+  </a>
+</div>
+{% endblock %}
