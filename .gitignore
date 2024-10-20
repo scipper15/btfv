@@ -15,4 +15,5 @@ data
 # Logging files
 *.log
 
-test_queries
+logos
+player_images

@@ -106,7 +106,7 @@ You might need to create and adapt the ´.env´ files, especially for production
 
 Scraping of the full dataset takes pretty long. We don't want to strain the server unnecessarily:
 
-[Download matchreports](https://drive.google.com/drive/folders/1M2-xkV0-wgnaMoJMP4Jg6XpfW_kAsMQp?usp=sharing).
+[Download Match Reports](https://drive.google.com/drive/folders/1M2-xkV0-wgnaMoJMP4Jg6XpfW_kAsMQp?usp=sharing).
 
 Extract them in project folder to be recognized by the scraper.
 

@@ -565,7 +565,7 @@ class DbPopulator:
         self._get_or_create_team_membership(session, home_player1, home_team, season)
         self._get_or_create_team_membership(session, away_player1, away_team, season)
 
-        # Add participants to match (single match)
+        # Add participants to match (single match: home_player1)
         match_participant_home1 = MatchParticipant(
             match_id=match.id,
             player_id=home_player1.id,
@@ -580,12 +580,14 @@ class DbPopulator:
             sigma_before_singles=player_ratings_singles[0].sigma
             if player_ratings_singles
             else None,
+            # n. b.: Adding current_mu_singles from Player
+            # As we need both singles and double rating in each MatchParticipant
             mu_after_singles=player_ratings_singles[1].mu
             if player_ratings_singles
-            else None,
+            else home_player1.current_mu_singles,
             sigma_after_singles=player_ratings_singles[1].sigma
             if player_ratings_singles
-            else None,
+            else home_player1.current_sigma_singles,
             mu_before_doubles=player_ratings_doubles[0].mu
             if player_ratings_doubles
             else None,
@@ -593,13 +595,15 @@ class DbPopulator:
             if player_ratings_doubles
             else None,
             mu_after_doubles=player_ratings_doubles[1].mu
-            if player_ratings_doubles
-            else None,
+            # n. b.: Adding current_mu_doubles from Player
+            # As we need both singles and double rating in each MatchParticipant
+            if player_ratings_doubles else home_player1.current_mu_doubles,
             sigma_after_doubles=player_ratings_doubles[1].sigma
             if player_ratings_doubles
-            else None,
+            else home_player1.current_sigma_doubles,
         )
 
+        # Add participants to match (single match: away_player1)
         match_participant_away1 = MatchParticipant(
             match_id=match.id,
             player_id=away_player1.id,
@@ -614,12 +618,14 @@ class DbPopulator:
             sigma_before_singles=player_ratings_singles[2].sigma
             if player_ratings_singles
             else None,
+            # n. b.: Adding current_mu_singles from Player
+            # As we need both singles and double rating in each MatchParticipant
             mu_after_singles=player_ratings_singles[3].mu
             if player_ratings_singles
-            else None,
+            else away_player1.current_mu_singles,
             sigma_after_singles=player_ratings_singles[3].sigma
             if player_ratings_singles
-            else None,
+            else away_player1.current_sigma_singles,
             mu_before_doubles=player_ratings_doubles[2].mu
             if player_ratings_doubles
             else None,
@@ -627,11 +633,12 @@ class DbPopulator:
             if player_ratings_doubles
             else None,
             mu_after_doubles=player_ratings_doubles[3].mu
-            if player_ratings_doubles
-            else None,
+            # n. b.: Adding current_mu_doubles from Player
+            # As we need both singles and double rating in each MatchParticipant
+            if player_ratings_doubles else away_player1.current_mu_doubles,
             sigma_after_doubles=player_ratings_doubles[3].sigma
             if player_ratings_doubles
-            else None,
+            else away_player1.current_sigma_doubles,
         )
         session.add(match_participant_home1)
         session.add(match_participant_away1)
@@ -652,6 +659,7 @@ class DbPopulator:
                 session, away_player2, away_team, season
             )
 
+            # Add participants to match (single match: home_player2)
             match_participant_home2 = MatchParticipant(
                 match_id=match.id,
                 player_id=home_player2.id,
@@ -660,31 +668,19 @@ class DbPopulator:
                 sigma_before_combined=player_ratings_combined[4].sigma,
                 mu_after_combined=player_ratings_combined[5].mu,
                 sigma_after_combined=player_ratings_combined[5].sigma,
-                mu_before_singles=player_ratings_singles[4].mu
-                if player_ratings_singles
-                else None,
-                sigma_before_singles=player_ratings_singles[4].sigma
-                if player_ratings_singles
-                else None,
-                mu_after_singles=player_ratings_singles[5].mu
-                if player_ratings_singles
-                else None,
-                sigma_after_singles=player_ratings_singles[5].sigma
-                if player_ratings_singles
-                else None,
-                mu_before_doubles=player_ratings_doubles[4].mu
-                if player_ratings_doubles
-                else None,
-                sigma_before_doubles=player_ratings_doubles[4].sigma
-                if player_ratings_doubles
-                else None,
-                mu_after_doubles=player_ratings_doubles[5].mu
-                if player_ratings_doubles
-                else None,
-                sigma_after_doubles=player_ratings_doubles[5].sigma
-                if player_ratings_doubles
-                else None,
+                mu_before_singles=None,
+                sigma_before_singles=None,
+                # n. b.: Adding current_mu_singles from Player
+                # As we need both singles and double rating in each MatchParticipant
+                mu_after_singles=home_player2.current_mu_singles,
+                sigma_after_singles=home_player2.current_sigma_singles,
+                # adding newly calculated doubles values
+                mu_before_doubles=player_ratings_doubles[4].mu,  # type: ignore
+                sigma_before_doubles=player_ratings_doubles[4].sigma,  # type: ignore
+                mu_after_doubles=player_ratings_doubles[5].mu,  # type: ignore
+                sigma_after_doubles=player_ratings_doubles[5].sigma,  # type: ignore
             )
+            # Add participants to match (single match: away_player2)
             match_participant_away2 = MatchParticipant(
                 match_id=match.id,
                 player_id=away_player2.id,
@@ -693,30 +689,17 @@ class DbPopulator:
                 sigma_before_combined=player_ratings_combined[6].sigma,
                 mu_after_combined=player_ratings_combined[7].mu,
                 sigma_after_combined=player_ratings_combined[7].sigma,
-                mu_before_singles=player_ratings_singles[6].mu
-                if player_ratings_singles
-                else None,
-                sigma_before_singles=player_ratings_singles[6].sigma
-                if player_ratings_singles
-                else None,
-                mu_after_singles=player_ratings_singles[7].mu
-                if player_ratings_singles
-                else None,
-                sigma_after_singles=player_ratings_singles[7].sigma
-                if player_ratings_singles
-                else None,
-                mu_before_doubles=player_ratings_doubles[6].mu
-                if player_ratings_doubles
-                else None,
-                sigma_before_doubles=player_ratings_doubles[6].sigma
-                if player_ratings_doubles
-                else None,
-                mu_after_doubles=player_ratings_doubles[7].mu
-                if player_ratings_doubles
-                else None,
-                sigma_after_doubles=player_ratings_doubles[7].sigma
-                if player_ratings_doubles
-                else None,
+                mu_before_singles=None,
+                sigma_before_singles=None,
+                # n. b.: Adding current_mu_singles from Player
+                # As we need both singles and double rating in each MatchParticipant
+                mu_after_singles=away_player2.current_mu_singles,
+                sigma_after_singles=away_player2.current_sigma_singles,
+                # adding newly calculated doubles values
+                mu_before_doubles=player_ratings_doubles[6].mu,  # type: ignore
+                sigma_before_doubles=player_ratings_doubles[6].sigma,  # type: ignore
+                mu_after_doubles=player_ratings_doubles[7].mu,  # type: ignore
+                sigma_after_doubles=player_ratings_doubles[7].sigma,  # type: ignore
             )
             session.add(match_participant_home2)
             session.add(match_participant_away2)

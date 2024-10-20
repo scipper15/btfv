@@ -91,6 +91,8 @@ class Extractor:
         {
             "Brosowsky , Felix": "Brosowsky, Felix",
             "Brosowsky , F.": "Brosowsky, F.",
+            "Burkhardt, Hans": "Gangl, Hans",
+            "Burkhardt, H.": "Gangl, H.",
             "Ebenhack , Matthias": "Ebenhack, Matthias",
             "Ebenhack , M.": "Ebenhack, M.",
             "Schillig , Stefan": "Schillig, Stefan",
