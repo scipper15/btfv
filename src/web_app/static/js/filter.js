@@ -17,7 +17,6 @@ function filterTable() {
       row.style.display = '';
       row.classList.remove('bg-white', 'even:bg-gray-200', 'bg-gray-200');
       visibleRows.push(row);
-      console.log(row)
 
       if (visibleRowIndex % 2 === 0) {
         row.classList.add('bg-white');
@@ -48,16 +47,3 @@ function changeSeason() {
     window.location.href = `${baseUrl}?year=${selectedValue}`;
   }
 }
-
-document.addEventListener("scroll", function() {
-  var inputField = document.getElementById("data-filter");
-  var seasonSelect = document.getElementById("season-select");
-
-  if (window.scrollY > 0) {
-    inputField.style.transform = "translateX(52px) translateY(-10px)";
-    seasonSelect.style.transform = "translateX(-35px) translateY(-10px)";
-  } else {
-    inputField.style.transform = "translateX(0px) translateY(0px)";
-    seasonSelect.style.transform = "translateX(0px) translateY(0px)";
-  }
-});
