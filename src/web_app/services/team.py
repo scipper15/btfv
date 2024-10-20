@@ -164,7 +164,7 @@ def get_team_details(session: Session, team_id: uuid.UUID) -> Any:
             MatchParticipantAlias.mu_after_doubles,
             MatchParticipantAlias.sigma_after_doubles,
         )
-        .order_by(last_match_subquery.c.last_match_date.desc())
+        .order_by(last_match_subquery.c.last_match_date.asc())
     ).all()
 
     return query
@@ -173,10 +173,23 @@ def get_team_details(session: Session, team_id: uuid.UUID) -> Any:
 def get_latest_team_membership(
     session: Session, player_id: str, season_year: int | None
 ) -> Row[tuple[UUID, UUID, str, DivisionName, str, UUID, int, str]] | None:
-    """Get logo, team and division data for a player in a particular year.
+    """Get logo, team, and division data for a player in a particular year.
 
     Returns the latest team data if no season_year is provided.
     """
+    # Subquery to get the latest team membership (max season year) for the player
+    latest_team_membership_subquery = (
+        session.query(
+            TeamMembership.player_id,
+            func.max(Season.season_year).label("latest_season_year"),
+        )
+        .join(Season, TeamMembership.season_id == Season.id)
+        .filter(TeamMembership.player_id == player_id)
+        .group_by(TeamMembership.player_id)
+        .subquery()
+    )
+
+    # Main query to get the details, joining with the subquery
     query = (
         session.query(
             Player.id.label("player_id"),
@@ -191,17 +204,27 @@ def get_latest_team_membership(
         .join(TeamMembership, Player.id == TeamMembership.player_id)
         .join(Team, TeamMembership.team_id == Team.id)
         .join(Division, Team.division_id == Division.id)
-        .join(Season, Division.season_id == Season.id)
+        .join(Season, TeamMembership.season_id == Season.id)
         .join(Association, Team.association_id == Association.id)
     )
+
     if season_year:
-        query = query.where(
+        # If specific season_year is provided, filter by that year
+        query = query.filter(
             and_(
                 Player.id == player_id,
                 Season.season_year == season_year,
             )
         )
     else:
-        query = query.where(Player.id == player_id)
+        # If no season_year is provided, use the latest season year from the subquery
+        query = query.join(
+            latest_team_membership_subquery,
+            and_(
+                Player.id == latest_team_membership_subquery.c.player_id,
+                Season.season_year
+                == latest_team_membership_subquery.c.latest_season_year,
+            ),
+        )
 
     return query.first()

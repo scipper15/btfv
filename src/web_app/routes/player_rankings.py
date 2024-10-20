@@ -1,6 +1,5 @@
-from flask import Blueprint, render_template, request, url_for
+from flask import Blueprint, g, render_template, request, url_for
 
-from web_app.services.get_environment import get_db_session
 from web_app.services.player import (
     get_most_recent_season,
     get_player_ranking,
@@ -22,7 +21,7 @@ def show_ranking() -> str:
     Returns:
         Rendered HTML template with player rankings.
     """
-    session = get_db_session()
+    session = g.db_session
 
     # Retrieve query parameters
     year_to_show = request.args.get("year")

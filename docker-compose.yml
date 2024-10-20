@@ -41,6 +41,39 @@ services:
     env_file:
       - .env.dev
     profiles:
+      - dev
+      - test
+      - prod
+
+  web:
+    build:
+      context: .
+      dockerfile: src/web_app/Dockerfile
+    environment:
+      - PYTHONDONTWRITEBYTECODE=${PYTHONDONTWRITEBYTECODE}
+      - PYTHONPATH=${PYTHONPATH}
+      - LOGGING_ENV=${LOGGING_ENV}
+
+      - SYNC_URL=${SYNC_URL}
+      - ASYNC_URL=${ASYNC_URL}
+      - FLASK_DEBUG=1
+    env_file:
+      - .env.dev
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./data:/app/data
+      - ./src:/app/src
+    command: poetry run gunicorn "web_main:app" --bind 0.0.0.0:8000 --workers 4
+    depends_on:
+      - db
+    networks:
+      - btfv
+    ports:
+      - "8000:8000"
+    profiles:
+      - dev
+      - test
       - prod
 
   adminer:

@@ -1,5 +1,6 @@
-from logging import Logger
+from typing import Any, Self
 
+from flask import Flask
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
@@ -9,26 +10,39 @@ from shared.database.models import BaseModel
 
 
 class Database:
-    def __init__(self, logger: Logger, settings: Settings) -> None:
+    _instance = None
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        self._logger = logger
 
-        self._logger.info(f"Using sync engine: {self._settings.SYNC_URL}")
-        self._logger.info(f"Using async engine: {self._settings.ASYNC_URL}")
+        if not hasattr(self, "initialized"):
+            print("Initializing... Creating sessions.")
+            # Sync engine and sessionmaker
+            self.sync_engine = create_engine(self._settings.SYNC_URL)
+            self.SyncSessionLocal = scoped_session(
+                sessionmaker(autocommit=False, autoflush=False, bind=self.sync_engine)
+            )
 
-        # Sync engine and sessionmaker
-        self.sync_engine = create_engine(self._settings.SYNC_URL)
-        self.SyncSessionLocal = scoped_session(
-            sessionmaker(autocommit=False, autoflush=False, bind=self.sync_engine)
-        )
+            # Async engine and sessionmaker
+            self.async_engine = create_async_engine(
+                self._settings.ASYNC_URL, future=True
+            )
+            self.AsyncSessionLocal = async_sessionmaker(
+                self.async_engine, expire_on_commit=False, class_=AsyncSession
+            )
+            self.initialized = True
 
-        # Async engine and sessionmaker
-        self.async_engine = create_async_engine(self._settings.ASYNC_URL, future=True)
-        self.AsyncSessionLocal = async_sessionmaker(
-            self.async_engine, expire_on_commit=False, class_=AsyncSession
-        )
+    def init_flask_app(self, app: Flask) -> None:
+        @app.teardown_appcontext
+        def shutdown_session(exception: BaseException | None = None) -> None:
+            self.SyncSessionLocal.remove()
 
-    def init_db(self):
+    def init_db(self) -> None:
         BaseModel.metadata.drop_all(self.sync_engine)
         BaseModel.metadata.create_all(self.sync_engine)
 
@@ -45,10 +59,6 @@ class Database:
         )
         return AsyncSessionLocal
 
-    # Close sync engine (useful for shutdown)
-    def close_sync(self):
-        self.sync_engine.dispose()
-
     # Close async engine (useful for shutdown)
-    async def close_async(self):
+    async def close_async(self) -> None:
         await self.async_engine.dispose()

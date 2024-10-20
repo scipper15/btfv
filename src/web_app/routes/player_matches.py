@@ -1,8 +1,7 @@
 from uuid import UUID
 
-from flask import Blueprint, render_template, request, url_for
+from flask import Blueprint, g, render_template, request, url_for
 
-from web_app.services.get_environment import get_db_session
 from web_app.services.player import (
     get_last_match_date,
     get_latest_player_ratings,
@@ -17,8 +16,6 @@ player_bp = Blueprint("player", __name__, template_folder="../templates")
 
 @player_bp.route("/<uuid:player_id>")
 def player(player_id: UUID) -> str:
-    session = get_db_session()
-
     # Retrieve query parameters
     year_to_show = request.args.get("year")
     if year_to_show is not None:
@@ -27,6 +24,7 @@ def player(player_id: UUID) -> str:
         except ValueError:
             year_to_show = None
 
+    session = g.db_session
     base_url = url_for("player.player", player_id=player_id)
     current_season = get_most_recent_season(session)
     player = get_latest_player_ratings(session, player_id, year_to_show)  # type: ignore

@@ -52,6 +52,16 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://{POSTGRES_USER}:${POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
     )
 
+    # web app
+    FLASK_APP: str = Field(default="web_main.py")
+    FLASK_RUN_HOST: str = Field(default="0.0.0.0")
+    SECRET_KEY: str = Field(default="your_secret_key")
+    SERVER_NAME: str = Field(default="tablesoccer.rocks:8000")
+    VIRTUAL_PORT: int = Field(default=80)
+    VIRTUAL_HOST: str = Field(default="btfv.tablesoccer.rocks")
+    LETSENCRYPT_HOST: str = Field(default="btfv.tablesoccer.rocks")
+    LETSENCRYPT_EMAIL: str = Field(default="reinhard.eichhorn@gmail.com")
+
     @model_validator(mode="after")  # type: ignore
     def create_paths_and_symlinks(cls, values: "Settings") -> "Settings":
         """This validator runs after all fields have been populated.
