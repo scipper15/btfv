@@ -8,6 +8,15 @@
 {% include 'partials/filter.html' %}
 
 {% include 'partials/player_header.html' %}
+
+<!-- Insert the Bokeh Plot here -->
+<section class="mt-6">
+  <div style="width: 100%;">
+    {{ bokeh_script|safe }}
+    {{ bokeh_div|safe }}
+  </div>
+</section>
+
 <!-- Matches Section -->
 <section class="mt-6">
   <table id="main-table" class="bg-white min-w-full text-left w-auto table-fixed">
@@ -77,7 +86,9 @@
         </td>
 
         <!-- Home Team Details -->
-        <td class="data-col px-2 py-3 {% if match.who_won == 'home' %}text-green-600{% else %}text-red-600{% endif %}">
+        <td
+          class="data-col px-2 py-3 {% if match.who_won == 'home' %}text-green-600{% else %}text-red-600{% endif %} id="
+          {{ match.global_match_nr }}">
           <!-- Away Player Name 1 -->
           <p class="text-sm font-bold text-gray-500">
             <a href="{{ url_for('player.player', player_id=match.home_player_id) }}">{{ match.home_player_name }}</a>
