@@ -64,7 +64,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./data:/app/data
       - ./src:/app/src
-    command: poetry run gunicorn "web_main:app" --bind 0.0.0.0:8000 --workers 4
+    command: poetry run gunicorn "web_main:app" --bind 0.0.0.0:8000 --workers 4 --reload
     depends_on:
       - db
     networks:
