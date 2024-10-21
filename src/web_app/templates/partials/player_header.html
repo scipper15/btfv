@@ -1,6 +1,6 @@
-<!-- Header: Player and Team Info -->
-<section class="bg-white p-6 shadow-md rounded-lg border-b pb-6">
-    <div class="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
+<!-- Desktop Layout (Visible on larger screens) -->
+<section class="hidden md:block bg-white p-6 shadow-md rounded-lg border-b pb-6">
+    <div class="flex flex-row justify-between items-center space-y-6">
 
         <!-- Player Info -->
         <div class="flex items-center space-x-6">
@@ -10,19 +10,17 @@
                 <h1 class="text-4xl font-extrabold text-gray-800">{{ player.name }}</h1>
                 <p class="text-lg font-semibold text-blue-600">Category: {{ player.category.value }}</p>
                 {% if player.national_id %}
-                <p class="hidden md:block text-sm text-gray-600">National Player-ID: {{ player.national_id }}</p>
+                <p class="text-sm text-gray-600">National Player-ID: {{ player.national_id }}</p>
                 {% endif %}
                 {% if player.international_id %}
-                <p class="hidden md:block text-sm text-gray-600">International Player-ID: {{ player.international_id }}
-                </p>
+                <p class="text-sm text-gray-600">International Player-ID: {{ player.international_id }}</p>
                 {% endif %}
             </div>
         </div>
 
         <!-- Player Rating -->
         <div class="text-center">
-            <span class="text-5xl font-extrabold text-green-600">{{ "%.2f" |
-                format(player.mu_confident) }}</span>
+            <span class="text-5xl font-extrabold text-green-600">{{ "%.2f" | format(player.mu_confident) }}</span>
             <p class="text-sm text-gray-500 mt-1">
                 &mu;={{ "%.2f" | format(player.mu_after_combined) }} | &sigma;={{ "%.2f" |
                 format(player.sigma_after_combined) }}
@@ -30,14 +28,14 @@
         </div>
 
         <!-- Division and Season Info -->
-        <div class="text-center md:text-left">
-            <p class="hidden md:block text-md font-bold text-gray-600">
+        <div class="text-center">
+            <p class="text-md font-bold text-gray-600">
                 {{player_info.division_name.value }} {{ player_info.region }}
             </p>
-            <p class="hidden md:block text-sm text-gray-600">
+            <p class="text-sm text-gray-600">
                 {% if player_info.season_year != current_season %}
                 Played for: {{ player_info.team_name }}
-                <br />Last played match: {{ last_played_match_date.strftime('%d.%m.%Y')}}
+                <br />Last played match: {{ last_played_match_date.strftime('%d.%m.%Y') }}
                 {% else %}
                 {{ player_info.team_name }}
                 {% endif %}
@@ -45,9 +43,44 @@
         </div>
 
         <!-- Team Logo -->
-        <div class="hidden md:block">
+        <div>
             <img src="{{ url_for('static', filename='logos/' + player_info.logo_file_name) }}" alt="Association Logo"
                 class="h-32 w-32 rounded border-4 border-gray-200 shadow-lg">
+        </div>
+    </div>
+</section>
+
+<!-- Mobile Layout (Visible on mobile screens) -->
+<section class="block md:hidden bg-white p-4 shadow-md rounded-lg border-b pb-6">
+    <div class="flex flex-col space-y-6 items-center">
+
+        <!-- 1st Row: Player Image and Overlapped Logo -->
+        <div class="relative">
+            <!-- Player Image (Full) -->
+            <img src="{{ url_for('static', filename='player_images/' + player.image_file_name) }}" alt="Player Photo"
+                class="h-32 w-32 rounded-full border-4 border-gray-200 shadow-lg">
+
+            <!-- Overlapped Team Logo -->
+            <img src="{{ url_for('static', filename='logos/' + player_info.logo_file_name) }}" alt="Association Logo"
+                class="absolute h-16 w-16 rounded-full border-2 border-white shadow-lg bottom-0 right-0 transform translate-x-2 translate-y-2">
+        </div>
+
+        <!-- 2nd Row: Player Info -->
+        <div class="text-center">
+            <!-- Player Name -->
+            <h1 class="text-2xl font-extrabold text-gray-800">{{ player.name }}</h1>
+
+            <!-- Category -->
+            <p class="text-lg font-semibold text-blue-600">Category: {{ player.category.value }}</p>
+
+            <!-- Confident Mu -->
+            <span class="block text-3xl font-extrabold text-green-600">{{ "%.2f" | format(player.mu_confident) }}</span>
+
+            <!-- Mu and Sigma -->
+            <p class="text-sm text-gray-500 mt-1">
+                &mu;={{ "%.2f" | format(player.mu_after_combined) }} | &sigma;={{ "%.2f" |
+                format(player.sigma_after_combined) }}
+            </p>
         </div>
     </div>
 </section>
