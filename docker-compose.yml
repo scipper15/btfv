@@ -14,10 +14,6 @@ services:
       - btfv
     env_file:
       - .env.dev
-    profiles:
-      - dev
-      - test
-      - prod
 
   scraper:
     build:
@@ -40,10 +36,6 @@ services:
       - btfv
     env_file:
       - .env.dev
-    profiles:
-      - dev
-      - test
-      - prod
 
   web:
     build:
@@ -57,8 +49,6 @@ services:
       - SYNC_URL=${SYNC_URL}
       - ASYNC_URL=${ASYNC_URL}
       - FLASK_DEBUG=1
-    env_file:
-      - .env.dev
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -71,10 +61,8 @@ services:
       - btfv
     ports:
       - "8000:8000"
-    profiles:
-      - dev
-      - test
-      - prod
+    env_file:
+      - .env.dev
 
   adminer:
     image: adminer:latest
@@ -89,13 +77,9 @@ services:
       - btfv
     env_file:
       - .env.dev
-    profiles:
-      - dev
-      - test
 
 networks:
   btfv:
 
 volumes:
   db-data:
-  data:

@@ -18,3 +18,5 @@ data
 logos
 player_images
 assets
+
+deploy.sh

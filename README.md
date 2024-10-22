@@ -112,6 +112,6 @@ Extract them in project folder to be recognized by the scraper.
 
 ## Using Docker
 
-To start the docker services (including for instance the database) run: ´docker compose --profile dev --env-file .env.dev up --build´ explicitely specifying ´.env´ file to be used. Some services won't be started in production environment if using the docker ´prod´ profile, for instance ´adminer´.
+To start the docker services (including for instance the database) run: ´docker-compose --env-file .env.dev up -d --build´ explicitely specifying which ´.env´ file to be used. Some services won't be started in production environment if using the docker ´prod´ profile, for instance ´adminer´. In production you need to run ´docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d --build´.
 
-To stop docker services run ´docker compose down´. In development you can ´docker compose down -v´ if you want to reinitialize all mounted volumes.
+To stop docker services run ´docker compose down´. In development you can ´docker compose down -v´ if you want to reinitialize (=delete)all mounted volumes.

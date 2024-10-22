@@ -1,4 +1,4 @@
-from flask import Flask, g
+from flask import Flask, g, render_template
 from sqlalchemy.orm import Session
 
 from shared.config.settings import settings
@@ -23,7 +23,7 @@ def create_app() -> Flask:
     # app config
     app.logger = web_app_logger
     # app.config["SQLALCHEMY_DATABASE_URI"] = settings.SYNC_URL
-    app.config["SECRET_KEY"] = settings.SECRET_KEY
+    app.config["FLASK_SECRET_KEY"] = settings.FLASK_SECRET_KEY
     # app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SERVER_NAME"] = settings.SERVER_NAME
 
@@ -39,8 +39,14 @@ def create_app() -> Flask:
         g.db_session = session
 
     @app.teardown_request
-    def remove_session(exception: BaseException | None = None) -> None:
+    def remove_session(e: BaseException | None = None) -> None:
         g.pop("db_session", None)
+
+    @app.errorhandler(404)
+    def page_not_found(
+        e: BaseException | None = None,
+    ) -> tuple[str, int]:
+        return render_template("404.html"), 404
 
     return app
 
