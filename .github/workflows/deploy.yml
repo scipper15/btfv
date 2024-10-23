@@ -31,8 +31,12 @@ jobs:
       run: |
         rsync -avz --exclude '.git' --exclude 'node_modules' ./ root@discovery.nandaba.de:/opt/dockervolumes/de.reinhardeichhorn/btfv.tablesoccer.rocks/
 
-    - name: Add remote host to known_hosts
-      run: ssh-keyscan discovery.nandaba.de >> ~/.ssh/known_hosts
+    - name: Build Docker images on Production Server
+      run: |
+        ssh root@discovery.nandaba.de "
+          cd /opt/dockervolumes/de.reinhardeichhorn/btfv.tablesoccer.rocks && \
+          docker build -t scraper-image -f src/scraper/Dockerfile . && \
+          docker build -t web-image -f src/web_app/Dockerfile ."
 
     - name: Deploy to Production Server
       env:
@@ -40,5 +44,6 @@ jobs:
         POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         FLASK_SECRET_KEY: ${{ secrets.FLASK_SECRET_KEY }}
       run: |
-        ssh root@discovery.nandaba.de "cd /opt/dockervolumes/de.reinhardeichhorn/btfv.tablesoccer.rocks && \
+        ssh root@discovery.nandaba.de "
+          cd /opt/dockervolumes/de.reinhardeichhorn/btfv.tablesoccer.rocks && \
           docker-compose --env-file .env.prod -f docker-compose-prod.yml up -d --build"
