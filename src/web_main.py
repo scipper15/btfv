@@ -13,7 +13,7 @@ from web_app.routes.team import team_bp
 def create_app() -> Flask:
     app = Flask(
         __name__,
-        static_folder=settings.BASE_PATH / "src/web_app/static/",
+        static_folder=settings.STATIC_FOLDER,
         static_url_path="/static",
         subdomain_matching=True,
     )
