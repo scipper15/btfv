@@ -79,6 +79,7 @@ def get_latest_player_ratings(
 
     If season_year is provided, filter by that season; otherwise, get the latest values.
     """
+    # Base query with necessary joins
     query = (
         session.query(
             Player.id,
@@ -93,10 +94,16 @@ def get_latest_player_ratings(
                 MatchParticipant.mu_after_combined
                 - 3 * MatchParticipant.sigma_after_combined
             ).label("mu_confident"),
-            Match.date,
+            Match.global_match_nr,
         )
         .join(MatchParticipant, MatchParticipant.player_id == Player.id)
         .join(Match, MatchParticipant.match_id == Match.id)
+        .group_by(
+            Player.id,
+            MatchParticipant.mu_after_combined,
+            MatchParticipant.sigma_after_combined,
+            Match.global_match_nr,
+        )
     )
 
     query = query.filter(Player.id == player_id)
@@ -105,8 +112,7 @@ def get_latest_player_ratings(
         query = query.join(Season, Match.season_id == Season.id)
         query = query.filter(Season.season_year == season_year)
 
-    # Order by match date descending to get the latest match
-    query = query.order_by(Match.date.desc())
+    query = query.order_by(Match.global_match_nr.desc())
 
     # Limit to the latest match
     result = query.first()
@@ -235,11 +241,11 @@ def get_player_ranking(
                     "player_id": str(row.player_id),
                     "player_name": row.player_name,
                     "image_file_name": row.image_file_name,
-                    "confident_mu_combined": round(row.confident_mu_combined, 2),
-                    "confident_mu_singles": round(row.confident_mu_singles, 2)
+                    "confident_mu_combined": row.confident_mu_combined,
+                    "confident_mu_singles": row.confident_mu_singles
                     if row.confident_mu_singles
                     else 0.0,
-                    "confident_mu_doubles": round(row.confident_mu_doubles, 2)
+                    "confident_mu_doubles": row.confident_mu_doubles
                     if row.confident_mu_doubles
                     else 0.0,
                     "current_mu_combined": row.current_mu_combined,
@@ -255,7 +261,7 @@ def get_player_ranking(
                     else None,
                     "total_matches": row.total_matches,
                     "matches_won": int(row.matches_won),
-                    "win_percentage": round(win_percentage, 2),
+                    "win_percentage": win_percentage,
                 }
             )
 
@@ -421,11 +427,11 @@ def get_player_ranking(
                     "player_id": str(row.player_id),
                     "player_name": row.player_name,
                     "image_file_name": row.image_file_name,
-                    "confident_mu_combined": round(row.confident_mu_combined, 2),
-                    "confident_mu_singles": round(row.confident_mu_singles, 2)
+                    "confident_mu_combined": row.confident_mu_combined,
+                    "confident_mu_singles": row.confident_mu_singles
                     if row.confident_mu_singles
                     else 0.0,
-                    "confident_mu_doubles": round(row.confident_mu_doubles, 2)
+                    "confident_mu_doubles": row.confident_mu_doubles
                     if row.confident_mu_doubles
                     else 0.0,
                     "current_mu_combined": row.current_mu_combined,
@@ -441,7 +447,7 @@ def get_player_ranking(
                     else None,
                     "total_matches": row.total_matches,
                     "matches_won": int(row.matches_won),
-                    "win_percentage": round(win_percentage, 2),
+                    "win_percentage": win_percentage,
                 }
             )
 
