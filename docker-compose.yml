@@ -30,6 +30,9 @@ services:
       - SCRAPER_INTERVAL=${SCRAPER_INTERVAL}
     volumes:
       - ./data:/app/data
+      - ./.env:/app/.env
+      - ./entrypoint.sh:/app/entrypoint.sh
+    entrypoint: ["/app/entrypoint.sh", "scraper"]
     depends_on:
       - db
     networks:
@@ -54,7 +57,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./data:/app/data
       - ./src:/app/src
-    command: poetry run gunicorn "web_main:app" --bind 0.0.0.0:8000 --workers 4 --reload
+      - ./.env:/app/.env
+      - ./entrypoint.sh:/app/entrypoint.sh
+    entrypoint: ["/app/entrypoint.sh", "web"]
     depends_on:
       - db
     networks:

@@ -13,5 +13,3 @@ RUN pip install poetry && \
 
 # Copy the code
 COPY src/ /app/src/
-
-CMD ["poetry", "run", "python", "/app/src/scraper_main.py"]

@@ -20,3 +20,4 @@ player_images
 assets
 
 deploy.sh
+docker-compose-prod.yml
