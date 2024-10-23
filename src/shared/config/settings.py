@@ -83,7 +83,6 @@ class Settings(BaseSettings):
         # Ensure all data paths are created
         for path in paths_to_create:
             path.mkdir(parents=True, exist_ok=True)
-            print(f"Created directory: {path}")
 
         # Symlink targets
         logos_target = values.STATIC_FOLDER / "logos"
