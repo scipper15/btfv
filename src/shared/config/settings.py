@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     FLASK_APP: str = Field(default="web_main.py")
     FLASK_RUN_HOST: str = Field(default="0.0.0.0")
     FLASK_SECRET_KEY: str = Field(default="your_secret_key")
-    SERVER_NAME: str = Field(default="tablesoccer.rocks:8000")
+    SERVER_NAME: str = Field(default="tablesoccer.rocks:5000")
     VIRTUAL_PORT: int = Field(default=80)
     VIRTUAL_HOST: str = Field(default="btfv.tablesoccer.rocks")
     LETSENCRYPT_HOST: str = Field(default="btfv.tablesoccer.rocks")

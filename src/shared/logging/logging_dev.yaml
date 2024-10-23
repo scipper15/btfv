@@ -7,48 +7,48 @@ handlers:
   console:
     class: logging.StreamHandler
     formatter: detailed
-    level: DEBUG
+    level: INFO
 loggers:
   main:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: False
   filehandler:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: False
   scraper:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: False
   extractor:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: False
   populator:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: False
   database:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: False
   skillcalc:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: False
   playerscraper:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: False
   webapp:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: False
   scrapingmanager:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: False
 root:
-  level: DEBUG
+  level: INFO
   handlers: [console]
