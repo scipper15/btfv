@@ -2,7 +2,7 @@ version: 1
 disable_existing_loggers: False
 formatters:
   detailed:
-    format: "[%(asctime)s] %(levelname)s in %(module)s: %(message)s (%(filename)s:%(lineno)d)"
+    format: "[%(asctime)s] [PID %(process)d] %(levelname)s in %(module)s: %(message)s (%(filename)s:%(lineno)d)"
 handlers:
   console:
     class: logging.StreamHandler
