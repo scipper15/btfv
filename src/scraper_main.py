@@ -16,7 +16,7 @@ from shared.logging.logging import (
 
 def main() -> None:
     file_handler = FileHandler(logger=file_handler_logger, settings=settings)
-    database = Database(settings=settings)
+    database = Database.instance(settings=settings)
     extractor = Extractor(logger=extractor_logger, settings=settings)
     scraper = Scraper(
         logger=scraper_logger, file_handler=file_handler, extractor=extractor
@@ -43,7 +43,7 @@ def main() -> None:
         database=database,
         file_handler=file_handler,
     )
-    # scraping_manager.process_seasons()
+    scraping_manager.process_seasons()
     # scraping_manager.populate_with_all_available_cached_data()
     # for page_id in [1734]:  # 1644, 1721, 1744, 1751
     #     scraping_manager.populate_by_page_id(page_id=page_id)

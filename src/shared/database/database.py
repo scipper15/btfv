@@ -11,6 +11,7 @@ from shared.database.models import BaseModel
 
 class Database:
     _instance = None
+    _initialized = False  # Track whether initialization has happened
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         if cls._instance is None:
@@ -18,10 +19,10 @@ class Database:
         return cls._instance
 
     def __init__(self, settings: Settings) -> None:
-        self._settings = settings
+        # Ensure initialization only runs once
+        if not self._initialized:
+            self._settings = settings
 
-        if not hasattr(self, "initialized"):
-            print("Initializing... Database session handling.")
             # Sync engine and sessionmaker
             self.sync_engine = create_engine(self._settings.SYNC_URL)
             self.SyncSessionLocal = scoped_session(
@@ -35,7 +36,9 @@ class Database:
             self.AsyncSessionLocal = async_sessionmaker(
                 self.async_engine, expire_on_commit=False, class_=AsyncSession
             )
-            self.initialized = True
+
+            # Mark as initialized to avoid repeating the setup
+            self._initialized = True
 
     def init_flask_app(self, app: Flask) -> None:
         @app.teardown_appcontext
@@ -52,13 +55,14 @@ class Database:
 
     async def get_async_session(self) -> async_sessionmaker[AsyncSession]:
         """Provide a transactional scope around a series of operations for async."""
-        AsyncSessionLocal = async_sessionmaker(
-            bind=self.async_engine,
-            class_=AsyncSession,
-            expire_on_commit=False,
-        )
-        return AsyncSessionLocal
+        return self.AsyncSessionLocal
 
     # Close async engine (useful for shutdown)
     async def close_async(self) -> None:
         await self.async_engine.dispose()
+
+    @classmethod
+    def instance(cls, settings: Settings) -> "Database":
+        if cls._instance is None:
+            cls._instance = cls(settings)
+        return cls._instance

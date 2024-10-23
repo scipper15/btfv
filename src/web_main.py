@@ -5,7 +5,7 @@ from shared.config.settings import settings
 from shared.database.database import Database
 from shared.logging.logging import web_app_logger
 from web_app.routes.home import home_bp
-from web_app.routes.player_matches import player_bp
+from web_app.routes.player_matches import player_bp  # type: ignore
 from web_app.routes.player_rankings import ranking_bp
 from web_app.routes.team import team_bp
 
@@ -17,7 +17,7 @@ def create_app() -> Flask:
         static_url_path="/static",
     )
     # initialize database
-    db = Database(settings=settings)
+    db = Database.instance(settings=settings)
     db.init_flask_app(app)
 
     # app config
