@@ -41,4 +41,4 @@ jobs:
         FLASK_SECRET_KEY: ${{ secrets.FLASK_SECRET_KEY }}
       run: |
         ssh root@discovery.nandaba.de "cd /opt/dockervolumes/de.reinhardeichhorn/btfv.tablesoccer.rocks && \
-          docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose-prod.yml up -d --build"
+          docker-compose --env-file .env.prod -f docker-compose-prod.yml up -d --build"
