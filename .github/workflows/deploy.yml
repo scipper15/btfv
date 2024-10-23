@@ -21,6 +21,10 @@ jobs:
     - name: Set up Docker
       uses: docker/setup-buildx-action@v1
 
+    - name: Transfer Repository Files to Production Server
+      run: |
+        rsync -avz --exclude '.git' --exclude 'node_modules' ./ root@discovery.nandaba.de:/opt/dockervolumes/de.reinhardeichhorn/btfv.tablesoccer.rocks/
+
     - name: Deploy to Production Server
       env:
         POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
