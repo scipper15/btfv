@@ -15,6 +15,7 @@ def create_app() -> Flask:
         __name__,
         static_folder=settings.BASE_PATH / "src/web_app/static/",
         static_url_path="/static",
+        subdomain_matching=True,
     )
     # initialize database
     db = Database.instance(settings=settings)
