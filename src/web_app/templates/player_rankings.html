@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+<!-- The last breadcrumb is the page title -->
+{% block title %}{{ breadcrumbs[-1].name }}{% endblock %}
+
+{% block content %}
+
+{% include 'partials/filter.html' %}
+
+<div class="container mx-auto bg-gray-200 max-w-5xl flex-grow">
+  <!-- Table -->
+  <div class="flex-grow overflow-x-auto">
+    <table id="main-table" class="min-w-full table-auto">
+      <thead class="sticky bg-gray-200">
+        <tr>
+          <th class="px-2 py-1 text-left text-gray-700 font-semibold cursor-pointer"
+            onclick="sortTable('rank-col', 'number', this)"># <span class="caret"></span></th>
+          <th class="px-1 py-1 text-left text-gray-700 font-semibold cursor-pointer"
+            onclick="sortTable('image-col', 'string', this)">Player <span class="caret"></span></th>
+          <th class="px-6 py-1 text-left text-gray-700 font-semibold cursor-pointer"
+            onclick="sortTable('data-col', 'string', this)">Details <span class="caret"></span></th>
+          <th class="py-1 text-gray-700 font-semibold cursor-pointer"
+            onclick="sortTable('rating-combined-col', 'number', this)">Combined <span class="caret">▲</span></th>
+          <!-- Add caret here -->
+          <th class="hidden md:table-cell px-4 py-1 text-right text-gray-700 font-semibold cursor-pointer"
+            onclick="sortTable('rating-singles-col', 'number', this)">Singles <span class="caret"></span></th>
+          <th class="hidden md:table-cell px-4 py-1 text-right text-gray-700 font-semibold cursor-pointer"
+            onclick="sortTable('rating-doubles-col', 'number', this)">Doubles <span class="caret"></span></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white">
+        {% for player in players %}
+        <tr class="even:bg-gray-200
+          {% if not year_to_show and player.last_match_date.year < current_season %}
+            bg-yellow-50 even:bg-yellow-50
+          {% endif %}">
+          <td class="px-2 py-4 text-left text-gray-700 font-medium rank-col">{{ loop.index }}</td>
+          <td class="image-col">
+            <a href="{{ url_for('player.player', player_id=player.player_id) }}">
+              <img src="{{ url_for('static', filename='player_images/' + player.image_file_name) }}"
+                alt="{{ player.player_name }}" class="h-20 w-20 rounded-full">
+            </a>
+          </td>
+          <td class="px-4 py-4 data-col">
+            <div class="text-sm font-medium text-gray-900">
+              <a href="{{ url_for('player.player', player_id=player.player_id) }}">{{ player.player_name
+                }}</a>
+            </div>
+            <div class="text-sm text-gray-500">
+              <a href="{{ url_for('team.team', team_id=player.team_id) }}">{{ player.team_name }}</a>
+            </div>
+            <div class="text-sm text-gray-400">{{ player.total_matches }} Matches | {{ "%.2f" |
+              format(player.win_percentage) }}% Wins</div>
+            <div class="text-xs text-gray-400">
+              Last match:
+              {% if player.last_match_date %}
+              {{ player.last_match_date.strftime('%d.%m.%Y') }}
+              {% else %}
+              N/A
+              {% endif %}
+            </div>
+          </td>
+
+          <!-- Rating Combined Column -->
+          <td class="px-4 py-4">
+            <div>
+              <span class="text-4xl font-semibold text-gray-900 rating-combined-col">{{ "%.2f" |
+                format(player.confident_mu_combined) }}</span><br>
+              <span class="text-xs text-gray-400">&mu;={{ "%.2f" | format(player.current_mu_combined) }}</span>
+              <span class="text-xs text-gray-400">&sigma;={{ "%.2f" | format(player.current_sigma_combined) }}</span>
+            </div>
+          </td>
+
+          <!-- Rating Singles Column -->
+          <td class="hidden md:table-cell px-4 py-4">
+            <div class="text-right">
+              <span class="text-4xl font-semibold text-gray-900 rating-singles-col">{{ "%.2f" |
+                format(player.confident_mu_singles) }}</span><br />
+              <span class="text-xs text-gray-400">&mu;={{ "%.2f" | format(player.current_mu_singles) }}</span>
+              <span class="text-xs text-gray-400">&sigma;={{ "%.2f" | format(player.current_sigma_singles) }}</span>
+            </div>
+          </td>
+
+          <!-- Rating Doubles Column -->
+          <td class="hidden md:table-cell px-4 py-4">
+            <div class="text-right">
+              <span class="text-4xl font-semibold text-gray-900 rating-doubles-col">{{ "%.2f" |
+                format(player.confident_mu_doubles) }}</span><br />
+              <span class="text-xs text-gray-400">&mu;={{ "%.2f" | format(player.current_mu_doubles) }}</span>
+              <span class="text-xs text-gray-400">&sigma;={{ "%.2f" | format(player.current_sigma_doubles) }}</span>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center text-gray-500 py-4">No players found matching the criteria.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/sort.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,28 @@
+<nav id="sticky-nav" class="sticky p-3 h-15 z-10" style="top: 86px">
+    <div class="flex justify-between items-center pt-3">
+        <!-- Filters for Player and Team -->
+        <div class="relative">
+            <input id="data-filter" type="text"
+                class="border border-gray-300 bg-teal-400 text-black p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-900"
+                onkeyup="filterTable()" placeholder="Filter team or player">
+        </div>
+        <!-- Season Dropdown -->
+        <div class="relative">
+            <select id="season-select" data-base-url="{{ base_url }}"
+                class="border border-gray-300 bg-teal-400 text-black p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-900"
+                onchange="changeSeason()">
+                <!-- All Time option -->
+                <option value="all" {% if year_to_show is none %} selected {% endif %}>All Time</option>
+
+                <!-- Season options -->
+                {% for season in seasons %}
+                <option value="{{ season.season_year }}" {% if year_to_show==season.season_year %} selected {% endif %}>
+                    {{ season.season_year }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</nav>
+
+<script src="{{ url_for('static', filename='js/filter.js') }}"></script>

@@ -16,7 +16,7 @@ from shared.logging.logging import (
 
 def main() -> None:
     file_handler = FileHandler(logger=file_handler_logger, settings=settings)
-    database = Database(logger=populator_logger, settings=settings)
+    database = Database.instance(settings=settings)
     extractor = Extractor(logger=extractor_logger, settings=settings)
     scraper = Scraper(
         logger=scraper_logger, file_handler=file_handler, extractor=extractor

@@ -3,31 +3,75 @@ disable_existing_loggers: False
 formatters:
   detailed:
     format: '%(asctime)s [%(levelname)s] [%(name)s]: %(message)s'
+  json:
+    format: '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}'
 handlers:
   console:
     class: logging.StreamHandler
-    formatter: detailed
+    formatter: json  # Change to detailed for plain text logs
     level: WARNING
-  file:
+  main_file:
     class: logging.handlers.RotatingFileHandler
-    filename: app.log
+    filename: main.log
+    formatter: detailed
+    level: INFO
+    maxBytes: 10485760  # 10MB
+    backupCount: 3
+  scraper_file:
+    class: logging.handlers.RotatingFileHandler
+    filename: scraper.log
+    formatter: detailed
+    level: INFO
+    maxBytes: 10485760  # 10MB
+    backupCount: 3
+  webapp_file:
+    class: logging.handlers.RotatingFileHandler
+    filename: webapp.log
     formatter: detailed
     level: INFO
     maxBytes: 10485760  # 10MB
     backupCount: 3
 loggers:
   main:
-    level: DEBUG
-    handlers: [console]
+    level: INFO
+    handlers: [console, main_file]
+    propagate: False
+  filehandler:
+    level: INFO
+    handlers: [console, main_file]
     propagate: False
   scraper:
-    level: DEBUG
-    handlers: [console]
+    level: INFO
+    handlers: [console, scraper_file]
     propagate: False
   extractor:
-    level: DEBUG
-    handlers: [console]
+    level: INFO
+    handlers: [console, scraper_file]
+    propagate: False
+  populator:
+    level: INFO
+    handlers: [console, main_file]
+    propagate: False
+  database:
+    level: INFO
+    handlers: [console, main_file]
+    propagate: False
+  skillcalc:
+    level: INFO
+    handlers: [console, main_file]
+    propagate: False
+  playerscraper:
+    level: INFO
+    handlers: [console, scraper_file]
+    propagate: False
+  webapp:
+    level: INFO
+    handlers: [console, webapp_file]
+    propagate: False
+  scrapingmanager:
+    level: INFO
+    handlers: [console, scraper_file]
     propagate: False
 root:
   level: WARNING
-  handlers: [console, file]
+  handlers: [console, main_file]

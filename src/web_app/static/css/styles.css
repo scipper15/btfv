@@ -1,0 +1,11 @@
+td a {
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-decoration-color: inherit;
+    text-underline-offset: 3px;
+}
+
+/* Ensure the heading text remains readable */
+#data-filter, #data-filter::placeholder, #season-select {
+    color: rgba(255, 255, 255, 0.8); /* White with some transparency */
+}

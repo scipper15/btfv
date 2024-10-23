@@ -2,18 +2,26 @@ version: 1
 disable_existing_loggers: False
 formatters:
   detailed:
-    format: "[%(asctime)s] %(levelname)s in %(module)s: %(message)s (%(filename)s:%(lineno)d)"
+    format: "[%(asctime)s] [PID %(process)d] %(levelname)s in %(module)s: %(message)s (%(filename)s:%(lineno)d)"
 handlers:
   console:
     class: logging.StreamHandler
     formatter: detailed
-    level: INFO
+    level: DEBUG
 loggers:
   main:
     level: DEBUG
     handlers: [console]
     propagate: False
   filehandler:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  scraper:
+    level: DEBUG
+    handlers: [console]
+    propagate: False
+  extractor:
     level: DEBUG
     handlers: [console]
     propagate: False
@@ -25,11 +33,11 @@ loggers:
     level: DEBUG
     handlers: [console]
     propagate: False
-  playerscraper:
+  skillcalc:
     level: DEBUG
     handlers: [console]
     propagate: False
-  skillcalc:
+  playerscraper:
     level: DEBUG
     handlers: [console]
     propagate: False
@@ -38,14 +46,6 @@ loggers:
     handlers: [console]
     propagate: False
   scrapingmanager:
-    level: DEBUG
-    handlers: [console]
-    propagate: False
-  scraper:
-    level: DEBUG
-    handlers: [console]
-    propagate: False
-  extractor:
     level: DEBUG
     handlers: [console]
     propagate: False

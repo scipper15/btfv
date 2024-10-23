@@ -52,12 +52,24 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://{POSTGRES_USER}:${POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
     )
 
+    # web app
+    FLASK_APP: str = Field(default="web_main.py")
+    FLASK_RUN_HOST: str = Field(default="0.0.0.0")
+    FLASK_SECRET_KEY: str = Field(default="your_secret_key")
+    SERVER_NAME: str = Field(default="tablesoccer.rocks:8000")
+    VIRTUAL_PORT: int = Field(default=80)
+    VIRTUAL_HOST: str = Field(default="btfv.tablesoccer.rocks")
+    LETSENCRYPT_HOST: str = Field(default="btfv.tablesoccer.rocks")
+    LETSENCRYPT_EMAIL: str = Field(default="reinhard.eichhorn@gmail.com")
+
+    ASSETS_PATH: Path = Field(default=Path.cwd() / "data" / "assets")
+
     @model_validator(mode="after")  # type: ignore
     def create_paths_and_symlinks(cls, values: "Settings") -> "Settings":
         """This validator runs after all fields have been populated.
 
         It ensures all directories exist and creates symlinks for association
-        logos and player images.
+        logos, player images, and assets.
         """
         # List of paths to create in the data directory
         paths_to_create = [
@@ -65,26 +77,27 @@ class Settings(BaseSettings):
             values.ASSOCIATION_LOGOS_PATH,
             values.PLAYER_HTML_PATH,
             values.PLAYER_IMAGES_PATH,
+            values.ASSETS_PATH,
         ]
 
         # Ensure all data paths are created
         for path in paths_to_create:
             path.mkdir(parents=True, exist_ok=True)
-            print(f"Created directory: {path}")
 
+        # Symlink targets
         logos_target = values.STATIC_FOLDER / "logos"
         player_images_target = values.STATIC_FOLDER / "player_images"
+        assets_target = values.STATIC_FOLDER / "assets"
 
-        # Symlinks for logos and images to be used in flask app
-        if not logos_target.is_symlink():
-            logos_target.symlink_to(values.ASSOCIATION_LOGOS_PATH, True)
-            print(f"Symlink created: {values.ASSOCIATION_LOGOS_PATH} -> {logos_target}")
-        if not player_images_target.is_symlink():
-            player_images_target.symlink_to(values.PLAYER_IMAGES_PATH, True)
-            print(
-                f"Symlink created: {values.PLAYER_IMAGES_PATH}"
-                f" -> {player_images_target}"
-            )
+        def create_symlink(target: Path, link: Path) -> None:
+            if not link.exists():
+                link.symlink_to(target, target_is_directory=True)
+                print(f"Symlink created: {target} -> {link}")
+
+        # Create symlinks for logos, player images, and assets
+        create_symlink(values.ASSOCIATION_LOGOS_PATH, logos_target)
+        create_symlink(values.PLAYER_IMAGES_PATH, player_images_target)
+        create_symlink(values.ASSETS_PATH, assets_target)
 
         return values
 

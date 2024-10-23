@@ -126,7 +126,6 @@ class PlayerScraper:
                 match = re.search(r"(\d)+", parts[1])
                 if match:
                     DTFB_from_id = int(match.group())
-                    print("DTFB_from_id:", DTFB_from_id)
 
                     full_player_url = f"https://dtfb.de{parts[0]}&{parts[1]}"
                     self._logger.info(f"Player details URL: {full_player_url}")
