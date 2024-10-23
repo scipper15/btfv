@@ -21,7 +21,7 @@ class Database:
         self._settings = settings
 
         if not hasattr(self, "initialized"):
-            print("Initializing... Creating sessions.")
+            print("Initializing... Database session handling.")
             # Sync engine and sessionmaker
             self.sync_engine = create_engine(self._settings.SYNC_URL)
             self.SyncSessionLocal = scoped_session(
