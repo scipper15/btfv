@@ -1,3 +1,5 @@
+import time
+
 from scraper.db_populator import DbPopulator
 from scraper.extractor import Extractor
 from scraper.file_handler import FileHandler
@@ -14,7 +16,7 @@ from shared.logging.logging import (
 )
 
 
-def main() -> None:
+def run_scraper() -> None:
     file_handler = FileHandler(logger=file_handler_logger, settings=settings)
     database = Database.instance(settings=settings)
     extractor = Extractor(logger=extractor_logger, settings=settings)
@@ -44,10 +46,22 @@ def main() -> None:
         file_handler=file_handler,
     )
     scraping_manager.process_seasons()
-    # scraping_manager.populate_with_all_available_cached_data()
-    # for page_id in [1734]:  # 1644, 1721, 1744, 1751
-    #     scraping_manager.populate_by_page_id(page_id=page_id)
-    # scraping_manager.get_all_player_html()
+
+
+def main() -> None:
+    interval = (
+        settings.SCRAPER_INTERVAL
+    )  # Retrieve the interval from the environment variable
+    while True:
+        try:
+            run_scraper()
+            print(
+                "Scraper run completed."
+                f"Waiting for {interval} seconds before the next run."
+            )
+        except Exception as e:
+            print(f"Error occurred during scraper run: {e}")
+        time.sleep(interval)
 
 
 if __name__ == "__main__":
