@@ -1,7 +1,7 @@
 from typing import Any, Self
 
 from flask import Flask
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
@@ -47,6 +47,16 @@ class Database:
     def init_db(self) -> None:
         BaseModel.metadata.drop_all(self.sync_engine)
         BaseModel.metadata.create_all(self.sync_engine)
+
+    def check_and_initialize_db(self) -> None:
+        """Check if any tables exist, and if not, initialize the database."""
+        inspector = inspect(self.sync_engine)
+        tables = inspector.get_table_names()
+        if not tables:
+            print("No tables found. Initializing the database...")
+            self.init_db()
+        else:
+            print(f"Existing tables: {tables}")
 
     def get_sync_session(self) -> Session:
         """Provide a transactional scope around a series of operations for sync."""
