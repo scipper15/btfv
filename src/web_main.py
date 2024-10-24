@@ -1,10 +1,12 @@
+import logging
+
 from flask import Flask, g, render_template
 from sqlalchemy.orm import Session
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from shared.config.settings import settings
 from shared.database.database import Database
-from shared.logging.logging import web_app_logger
+from shared.logging.logging import scraper_logger, web_app_logger
 from web_app.routes.home import home_bp
 from web_app.routes.player_matches import player_bp  # type: ignore
 from web_app.routes.player_rankings import ranking_bp
@@ -17,6 +19,10 @@ def create_app() -> Flask:
         static_folder=None,
         subdomain_matching=True,
     )
+    gunicorn_error_handlers = logging.getLogger("gunicorn.error").handlers
+    app.logger.handlers.extend(gunicorn_error_handlers)
+    app.logger.addFilter(web_app_logger)
+    app.logger.addFilter(scraper_logger)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)  # type: ignore
 
     app.static_folder = str(settings.STATIC_FOLDER)
