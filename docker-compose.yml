@@ -10,8 +10,6 @@ services:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
-    networks:
-      - btfv
     env_file:
       - .env.dev
 
@@ -35,8 +33,6 @@ services:
     entrypoint: ["/app/entrypoint.sh", "scraper"]
     depends_on:
       - db
-    networks:
-      - btfv
     env_file:
       - .env.dev
 
