@@ -1,4 +1,5 @@
 from pathlib import Path
+from urllib.parse import quote
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -6,9 +7,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=(".env.dev", ".env.test", ".env.prod"),
+        env_file=("../.env.dev", "../.env.test", "../.env.prod"),
         extra="allow",
     )
+    """
+    The `Settings` class manages configuration for the application.
+
+    This class automatically:
+        - Loads environment variables from `.env` files (supports multiple environments
+          like `.env.dev`, `.env.test`, `.env.prod`).
+        - Dynamically builds database connection strings (`SYNC_URL` and `ASYNC_URL`)
+          by URL-encoding sensitive information like passwords.
+        - Ensures that specific directories (e.g., asset directories) are created, and
+          symlinks are set up for these directories to make the application more
+          portable."""
 
     PYTHONDONTWRITEBYTECODE: bool = False
     PYTHONPATH: str = "./src"
@@ -65,6 +77,26 @@ class Settings(BaseSettings):
     ASSETS_PATH: Path = Field(default=Path.cwd() / "data" / "assets")
 
     @model_validator(mode="after")  # type: ignore
+    def build_sync_url(cls, values: "Settings") -> "Settings":
+        """Post-processes the settings to build the database connection URLs.
+
+        It constructs the `SYNC_URL` and `ASYNC_URL` based on the PostgreSQL
+        credentials from the environment variables, properly URL-encoding the
+        password to handle any special characters.
+        """
+        user = values.POSTGRES_USER
+        password = values.POSTGRES_PASSWORD
+        host = values.POSTGRES_HOST
+        db = values.POSTGRES_DB
+        values.SYNC_URL = (
+            f"postgresql+psycopg2://{user}:{quote(password)}@{host}:5432/{db}"
+        )
+        values.ASYNC_URL = (
+            f"postgresql+asyncpg://{user}:{quote(password)}@{host}:5432/{db}"
+        )
+        return values
+
+    @model_validator(mode="after")  # type: ignore
     def create_paths_and_symlinks(cls, values: "Settings") -> "Settings":
         """This validator runs after all fields have been populated.
 
@@ -90,7 +122,7 @@ class Settings(BaseSettings):
         assets_target = values.STATIC_FOLDER / "assets"
 
         def create_symlink(target: Path, link: Path) -> None:
-            if not link.exists():
+            if link.exists() and not link.is_symlink():
                 link.symlink_to(target, target_is_directory=True)
                 print(f"Symlink created: {target} -> {link}")
 
