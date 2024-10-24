@@ -7,6 +7,7 @@ from scraper.scraper import PlayerScraper, Scraper
 from scraper.scraping_manager import ScrapingManager
 from shared.config.settings import settings
 from shared.database.database import Database
+from shared.database.models import Player
 from shared.logging.logging import (
     extractor_logger,
     file_handler_logger,
@@ -45,7 +46,14 @@ def run_scraper() -> None:
         database=database,
         file_handler=file_handler,
     )
-    scraping_manager.process_seasons()
+    session = Database(settings=settings).get_sync_session()
+    row_count = session.query(Player).count()
+
+    if row_count == 0:
+        # Assuming we used rsync to sync the datafiles
+        scraping_manager.populate_with_all_available_cached_data()
+    else:
+        scraping_manager.process_seasons()
 
 
 def main() -> None:
