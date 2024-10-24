@@ -21,10 +21,6 @@ services:
       - PYTHONDONTWRITEBYTECODE=${PYTHONDONTWRITEBYTECODE}
       - PYTHONPATH=${PYTHONPATH}
       - LOGGING_ENV=${LOGGING_ENV}
-
-      - SYNC_URL=${SYNC_URL}
-      - ASYNC_URL=${ASYNC_URL}
-
       - SCRAPER_INTERVAL=${SCRAPER_INTERVAL}
     volumes:
       - ./data:/app/data
@@ -44,9 +40,6 @@ services:
       - PYTHONDONTWRITEBYTECODE=${PYTHONDONTWRITEBYTECODE}
       - PYTHONPATH=${PYTHONPATH}
       - LOGGING_ENV=${LOGGING_ENV}
-
-      - SYNC_URL=${SYNC_URL}
-      - ASYNC_URL=${ASYNC_URL}
       - FLASK_DEBUG=1
     volumes:
       - /etc/timezone:/etc/timezone:ro
