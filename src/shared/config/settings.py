@@ -46,10 +46,10 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = Field(default="db")
     POSTGRES_DB: str = Field(default="db")
     SYNC_URL: str = Field(
-        default="postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
+        default=f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
     )
     ASYNC_URL: str = Field(
-        default="postgresql+asyncpg://{POSTGRES_USER}:${POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
+        default=f"postgresql+asyncpg://{POSTGRES_USER}:${POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
     )
 
     # web app

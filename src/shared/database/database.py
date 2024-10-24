@@ -11,7 +11,7 @@ from shared.database.models import BaseModel
 
 class Database:
     _instance = None
-    _initialized = False  # Track whether initialization has happened
+    _initialized = False
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         if cls._instance is None:
@@ -19,7 +19,6 @@ class Database:
         return cls._instance
 
     def __init__(self, settings: Settings) -> None:
-        # Ensure initialization only runs once
         if not self._initialized:
             self._settings = settings
 
