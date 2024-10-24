@@ -34,7 +34,7 @@ case "$SERVICE" in
   web)
     echo "Running web service..."
     # Start the Flask web server (for web service)
-    exec poetry run flask run --host=0.0.0.0 --port=8000
+    exec poetry run flask --debug run --host=0.0.0.0 --port=8000
     # exec poetry run gunicorn "web_main:app" --bind 0.0.0.0 --workers 2 --capture-output --reload --log-level debug --timeout 120 --access-logfile -
     --forwarded-allow-ips=172.23.0.6
     ;;
