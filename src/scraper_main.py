@@ -46,7 +46,10 @@ def run_scraper() -> None:
         database=database,
         file_handler=file_handler,
     )
-    session = Database(settings=settings).get_sync_session()
+    db = Database(settings=settings)
+    db.check_and_initialize_db()
+    session = db.get_sync_session()
+
     row_count = session.query(Player).count()
 
     if row_count == 0:
