@@ -1,5 +1,6 @@
 from flask import Flask, g, render_template
 from sqlalchemy.orm import Session
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from shared.config.settings import settings
 from shared.database.database import Database
@@ -13,10 +14,20 @@ from web_app.routes.team import team_bp
 def create_app() -> Flask:
     app = Flask(
         __name__,
-        static_folder=settings.STATIC_FOLDER,
-        static_url_path="/static",
+        static_folder=None,
         subdomain_matching=True,
     )
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)  # type: ignore
+
+    app.static_folder = str(settings.STATIC_FOLDER)
+    # fix for static files not found (404) due to missing subdomain
+    app.add_url_rule(
+        "/static/<path:filename>",
+        endpoint="static",
+        subdomain="btfv",
+        view_func=app.send_static_file,
+    )
+
     # initialize database
     db = Database.instance(settings=settings)
     db.init_flask_app(app)
@@ -27,6 +38,14 @@ def create_app() -> Flask:
     app.config["FLASK_SECRET_KEY"] = settings.FLASK_SECRET_KEY
     # app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SERVER_NAME"] = settings.SERVER_NAME
+
+    # fix for static files not found (404) due to missing subdomain
+    app.add_url_rule(
+        "/static/<path:filename>",
+        endpoint="static",
+        subdomain="btfv",
+        view_func=app.send_static_file,
+    )
 
     # Register blueprints for modular routing
     app.register_blueprint(home_bp, subdomain="btfv")
