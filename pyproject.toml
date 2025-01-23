@@ -3,7 +3,7 @@ name = "btfv"
 version = "0.1.0"
 description = ""
 authors = ["Martin-Reinhard Eichhorn <reinhard.eichhorn@gmail.com>"]
-readme = "README.md"
+# readme = "README.md"
 packages = [{include = "src/scraper"}, {include = "src/shared/config"}]
 
 [tool.poetry.dependencies]
