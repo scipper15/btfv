@@ -102,7 +102,7 @@ You might need to create and adapt the ´.env´ files, especially for production
 - `ASYNC_URL`: Asynchronous database connection URL.
 - `SCRAPER_INTERVAL`: Interval for the scraper in seconds.
 
-## Getting The Data
+## Getting The Data Without Actually Scraping
 
 Scraping of the full dataset takes pretty long. We don't want to strain the server unnecessarily:
 
