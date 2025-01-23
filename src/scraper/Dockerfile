@@ -13,3 +13,4 @@ RUN pip install poetry && \
 
 # Copy the code
 COPY src/ /app/src/
+RUN ls -la /app/src
