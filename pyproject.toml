@@ -4,7 +4,8 @@ version = "0.1.0"
 description = ""
 authors = ["Martin-Reinhard Eichhorn <reinhard.eichhorn@gmail.com>"]
 readme = "README.md"
-packages = [{include = "src/scraper"}, {include = "src/shared/config"}]
+# packages = [{include = "src/scraper"}, {include = "src/shared/config"}]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
