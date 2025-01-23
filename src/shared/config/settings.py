@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from urllib.parse import quote
 
@@ -22,6 +23,8 @@ class Settings(BaseSettings):
           symlinks are set up for these directories to make the application more
           portable."""
 
+    ENV: str = os.getenv("ACTIVE_ENV", "dev")
+    env_file: str = f"../.env.{ENV}"
     PYTHONDONTWRITEBYTECODE: bool = False
     PYTHONPATH: str = "./src"
     LOGGING_ENV: str = Field(default="dev")

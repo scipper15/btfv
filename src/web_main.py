@@ -40,9 +40,9 @@ def create_app() -> Flask:
 
     # app config
     app.logger = web_app_logger
-    # app.config["SQLALCHEMY_DATABASE_URI"] = settings.SYNC_URL
     app.config["FLASK_SECRET_KEY"] = settings.FLASK_SECRET_KEY
-    # app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    if settings.ENV == "dev":
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
     app.config["SERVER_NAME"] = settings.SERVER_NAME
 
     # fix for static files not found (404) due to missing subdomain

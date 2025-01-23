@@ -1,3 +1,4 @@
+import logging
 import time
 
 from scraper.db_populator import DbPopulator
@@ -46,6 +47,12 @@ def run_scraper() -> None:
         database=database,
         file_handler=file_handler,
     )
+    # only use gunicorn.error logger for all logging
+    LOGGER = logging.getLogger("gunicorn.debug")
+    LOGGER.info("my info")
+    LOGGER.debug("debug message")
+    # this would write the log messages to error.log
+    print("Checking and initializing database...")
     db = Database(settings=settings)
     db.check_and_initialize_db()
     session = db.get_sync_session()
@@ -54,8 +61,12 @@ def run_scraper() -> None:
 
     if row_count == 0:
         # Assuming we used rsync to sync the datafiles
+        scraper_logger.debug("Detailed debug message for scraper processing...")
+        print("Re-Populating complete database with already cached data...")
         scraping_manager.populate_with_all_available_cached_data()
     else:
+        scraper_logger.debug("Detailed debug message for scraper processing...")
+        print("Populating database with new data...")
         scraping_manager.process_seasons()
 
 
