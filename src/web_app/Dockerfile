@@ -7,7 +7,6 @@ ENV PYTHONPATH=/app
 
 # Install dependencies
 COPY pyproject.toml poetry.lock* README.md /app/
-RUN ls -la /app
 RUN pip install --upgrade pip
 RUN pip install poetry && \
     poetry install --no-interaction --no-ansi
