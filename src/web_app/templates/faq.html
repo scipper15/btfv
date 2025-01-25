@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Frequently Asked Questions{% endblock %}
+
+{% block content %}
+
+<section class="dark:bg-gray-100 dark:text-gray-800">
+    <div class="container flex flex-col justify-center p-4 mx-auto md:p-8">
+        <p class="p-2 text-sm font-medium tracking-wider text-center uppercase">How it works</p>
+        <h2 class="mb-12 text-4xl font-bold leading-none text-center sm:text-5xl">Frequently Asked Questions</h2>
+        <div class="flex flex-col divide-y sm:px-8 lg:px-12 xl:px-32 dark:divide-gray-300">
+            <details>
+                <summary class="py-2 outline-none cursor-pointer focus:underline">How does the rating system work?
+                </summary>
+                <div class="px-4 pb-4">
+                    <p>The rating system is based on an advanced skill rating algorithm designed to evaluate a player's
+                        strength and track their progress over time. The system uses performance data from matches to
+                        adjust a player's rating dynamically, accounting for the difficulty of opponents and the
+                        outcomes of each game. This ensures that the ratings are accurate and reflect the true skill
+                        levels of players within the community. Unlike the popular <a
+                            href="https://de.wikipedia.org/wiki/Elo-Zahl" target="_blank">Elo rating system</a>, which
+                        was initially designed for chess, the skill algorithm we use here is designed to support games
+                        with more than two players. For more details on the mathematical principles behind this system,
+                        check out <a
+                            href="https://proceedings.neurips.cc/paper_files/paper/2006/file/f44ee263952e65b3610b8ba51229d1f9-Paper.pdf"
+                            target="_blank">this paper about the TrueSkill algorithm</a>.
+                    </p>
+
+                </div>
+            </details>
+            <details>
+                <summary class="py-2 outline-none cursor-pointer focus:underline">Where is the data from?</summary>
+                <div class="px-4 pb-4">
+                    <p>The data comes from more than 60,000 league matches organized by the <a href="https://btfv.de/"
+                            target="_blank">Bayerischer Tischfußballverband e.V. (BTFV)</a> since 2012, which are freely
+                        available <a href="https://btfv.de/aktuelle-saison/" target="blank">on their page</a>. New match
+                        results are scraped automatically every 24 hours, ensuring that the rankings and player
+                        statistics are up to date with the latest results from the league.</p>
+                </div>
+            </details>
+            <details>
+                <summary class="py-2 outline-none cursor-pointer focus:underline">I played a match recently: Why is it
+                    not listed yet?</summary>
+                <div class="px-4 pb-4">
+                    <p>Patience is a virtue! Matches are synchronized with the BTFV webpage once every 24 hours. If
+                        you've already waited and the match is still not listed, please check that the data has been
+                        published on the BTFV homepage. If it's still missing, feel free to contact me at <a
+                            href="mailto:reinhard.eichhorn@gmail.com">reinhard.eichhorn@gmail.com</a> for assistance.
+                    </p>
+                </div>
+            </details>
+            <details>
+                <summary class="py-2 outline-none cursor-pointer focus:underline">Why am I not listed?</summary>
+                <div class="px-4 pb-4">
+                    <p>To be listed in the rankings for a specific season, a player must have participated in at least
+                        one match during that season. If you are not listed, please check if you've played in the
+                        current season. If you believe there is an issue, don't hesitate to reach out for support.</p>
+                </div>
+            </details>
+            <details>
+                <summary class="py-2 outline-none cursor-pointer focus:underline">Found an error?</summary>
+                <div class="px-4 pb-4">
+                    <p>If you find an error in the rankings or player data, please let me know by sending an email to <a
+                            href="mailto:reinhard.eichhorn@gmail.com">reinhard.eichhorn@gmail.com</a> with a description
+                        of the issue. I will look into it and correct the data as soon as possible.</p>
+                </div>
+            </details>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

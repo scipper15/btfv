@@ -7,6 +7,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from shared.config.settings import settings
 from shared.database.database import Database
 from shared.logging.logging import scraper_logger, web_app_logger
+from web_app.routes.faq import faq_bp
 from web_app.routes.home import home_bp
 from web_app.routes.player_matches import player_bp  # type: ignore
 from web_app.routes.player_rankings import ranking_bp
@@ -55,6 +56,7 @@ def create_app() -> Flask:
 
     # Register blueprints for modular routing
     app.register_blueprint(home_bp, subdomain="btfv")
+    app.register_blueprint(faq_bp, subdomain="btfv")
     app.register_blueprint(player_bp, url_prefix="/player", subdomain="btfv")
     app.register_blueprint(ranking_bp, url_prefix="/ranking", subdomain="btfv")
     app.register_blueprint(team_bp, url_prefix="/team", subdomain="btfv")

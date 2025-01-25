@@ -54,9 +54,8 @@ def player(player_id: UUID) -> str:
 
     breadcrumbs = [
         {"name": "Home", "url": "/"},
-        {"name": "Rankings", "url": "/ranking"},
         {
-            "name": "All Players Rankings",
+            "name": "Players Ranking",
             "url": url_for("ranking.show_ranking", year=[current_season]),
         },
         {"name": player.name, "url": None},

@@ -40,10 +40,11 @@ def show_ranking() -> str:
     # Fetch all available seasons for the dropdown
     seasons = get_seasons(session=session)
 
+    year_to_show_ranking_url = url_for("ranking.show_ranking", year=[year_to_show])
     breadcrumbs = [
         {"name": "Home", "url": "/"},
-        {"name": "Rankings", "url": "/"},  # Current page
-        {"name": "All Players Rankings", "url": None},  # Current page
+        {"name": "Players Ranking", "url": year_to_show_ranking_url},
+        {"name": year_to_show or "All Players", "url": None},
     ]
 
     return render_template(

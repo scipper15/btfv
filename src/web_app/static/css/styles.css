@@ -1,4 +1,4 @@
-td a {
+h2 a, div>a, td a, div p a {
     text-decoration: underline;
     text-decoration-style: dashed;
     text-decoration-color: inherit;
