@@ -21,3 +21,6 @@ assets
 
 deploy.sh
 docker-compose-prod.yml
+
+node_modules
+package-lock.json
