@@ -201,6 +201,10 @@ class Extractor:
 
         if len(player_names) == 0:
             idx = -2 if home else -1
+            player_names = [row.find_all("td")[1].get_text(strip=True) for row in rows]
+
+        if len(player_names) == 0:
+            idx = -2 if home else -1
             rows = tables[idx].find("tbody").find_all("tr")
             player_names = [row.find_all("td")[1].get_text(strip=True) for row in rows]
 
