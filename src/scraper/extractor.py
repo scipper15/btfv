@@ -199,9 +199,11 @@ class Extractor:
         rows = tables[idx].find("tbody").find_all("tr")
         player_names = [row.find_all("td")[1].get_text(strip=True) for row in rows]
 
-        if len(player_names) == 0:
+        if any(name == ":" for name in player_names):
             idx = -2 if home else -1
-            rows = tables[idx].find("tbody").find_all("tr")
+            rows = (
+                tables[idx].find("tbody").find_all("tr")
+            )  # You need to re-assign rows here!
             player_names = [row.find_all("td")[1].get_text(strip=True) for row in rows]
 
         player_names = cast(
