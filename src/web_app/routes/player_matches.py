@@ -13,7 +13,7 @@ from web_app.services.player import (
     get_last_match_date,
     get_latest_player_ratings,
     get_most_recent_season,
-    get_player_match_data,
+    get_player_match_data_with_gain,
     get_player_seasons,
 )
 from web_app.services.team import get_latest_team_membership
@@ -44,7 +44,7 @@ def player(player_id: UUID) -> str:
         player_id,
         year_to_show,
     )
-    matches = get_player_match_data(session, player.name, year_to_show)
+    matches = get_player_match_data_with_gain(session, player.name, year_to_show)
 
     # Prepare data for the plot
     match_data = prepare_match_data(matches, player.name)

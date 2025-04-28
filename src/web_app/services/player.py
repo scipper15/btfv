@@ -1,5 +1,6 @@
+from collections import defaultdict
 from datetime import datetime
-from typing import Any
+from typing import Any, DefaultDict
 import uuid
 
 from sqlalchemy import and_, case, desc, extract, func, or_
@@ -452,6 +453,50 @@ def get_player_ranking(
             )
 
     return player_rankings
+
+
+def get_player_match_data_with_gain(
+    session: Session, player_name: str, season_year: int | None
+) -> list[dict[str, Any]]:
+    """Get all match data for a player, including mu_gain per matchday.
+
+    Output is a list of dictionaries, ready for JSON serialization.
+    """
+    rows = get_player_match_data(session, player_name, season_year)
+
+    matches: list[dict[str, Any]] = [row._asdict() for row in rows]
+
+    # group by match_day_nr
+    by_day: DefaultDict[int, list[dict[str, Any]]] = defaultdict(list)
+    for m in matches:
+        by_day[m["match_day_nr"]].append(m)
+
+    # calculate mu_gain
+    mu_gains: dict[int, float] = {}
+    for day, day_matches in by_day.items():
+        # sortieren nach match_nr
+        day_matches.sort(key=lambda d: d["match_nr"])
+        first, last = day_matches[0], day_matches[-1]
+
+        # mu_before
+        if first["home_player_name"] == player_name:
+            mu_before = first["home_mu_before"]
+        else:
+            mu_before = first["away_mu_before"]
+
+        # mu_after
+        if last["home_player_name"] == player_name:
+            mu_after = last["home_mu_after"]
+        else:
+            mu_after = last["away_mu_after"]
+
+        mu_gains[day] = mu_after - mu_before
+
+    # append mu_gain
+    for m in matches:
+        m["mu_gain"] = mu_gains.get(m["match_day_nr"], 0.0)
+
+    return matches
 
 
 def get_player_match_data(
