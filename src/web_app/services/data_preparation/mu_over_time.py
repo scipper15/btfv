@@ -53,7 +53,9 @@ def prepare_match_data(
     df = pd.DataFrame(data)
 
     # Now we group by the date and select the last match
-    # (if there are multiple matches per date)
     df = df.sort_values("date").drop_duplicates(subset="date", keep="last")
+    df["delta_mu"] = df["confident_mu"].diff()
+    # erste Zeile statt NaN mit 0 füllen
+    df["delta_mu"].fillna(0, inplace=True)
 
     return df

@@ -96,6 +96,10 @@ def create_player_performance_graph(df: pd.DataFrame):
                 "Confident \u00b5",
                 "@confident_mu{0.2f}",
             ),
+            (
+                "\u00b5 gain",
+                "@delta_mu{0.2f}",
+            ),
             ("Global Match Nr", "@global_match_nr"),
         ],
         formatters={"@date": "datetime"},  # Apply datetime formatting to the date
