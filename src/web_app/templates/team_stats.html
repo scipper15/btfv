@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Team Statistics Overview{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-12">
+    {% include "partials/_stats_toggle.html" %}
+
+    <h2 class="text-2xl font-semibold mb-4">Team Statistics by Season</h2>
+
+    <div class="mb-6 flex flex-wrap gap-4">
+        <!-- Season Dropdown -->
+        <div>
+            <label for="team-season-select" class="block mb-1 font-medium">Season</label>
+            <select id="team-season-select" name="season_id" hx-get="{{ url_for('stats.team_stats_teams') }}"
+                hx-target="#team-select" hx-trigger="change"
+                class="py-2 px-3 border rounded focus:ring-2 focus:ring-blue-500">
+                <option value="">–– Select season ––</option>
+                {% for id, year in seasons %}
+                <option value="{{ id }}">{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Team Dropdown (wird von HTMX nachladen) -->
+        <div>
+            <label for="team-select" class="block mb-1 font-medium">Team</label>
+            <select id="team-select" name="team_id" hx-get="{{ url_for('stats.team_stats_details') }}"
+                hx-target="#player-details" hx-trigger="change" hx-include="#team-season-select"
+                class="py-2 px-3 border rounded focus:ring-2 focus:ring-blue-500">
+                <option value="">–– Select season first ––</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Platzhalter / Detail-Container -->
+    <div id="player-details" class="border rounded">
+        <div class="p-4 text-gray-600">
+            Please select season &amp; team to see player details.
+        </div>
+    </div>
+</div>
+{% endblock %}

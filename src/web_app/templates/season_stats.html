@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Divisions Overview{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-12">
+    {% include "partials/_stats_toggle.html" %}
+    <h2 class="text-2xl font-semibold mb-4">Average expected Value for Players by Season</h2>
+    <table class="min-w-full bg-white text-center">
+        <!-- Season -->
+        <th class="py-2 px-2 border-b bg-white">
+            <div class="inline-block origin-left sm:rotate-0 sm:origin-center">
+                Season
+            </div>
+        </th>
+        <!-- # Player -->
+        <th class="py-2 px-2 border-b bg-white">
+            <div class="inline-block origin-left sm:rotate-0 sm:origin-center">
+                # Player
+            </div>
+        </th>
+        <!-- Ø confident μ -->
+        <th class="py-2 px-2 border-b bg-white">
+            <div class="inline-block origin-left sm:rotate-0 sm:origin-center">
+                Ø μ
+            </div>
+        </th>
+        <!-- Median confident μ -->
+        <th class="py-2 px-2 border-b bg-white">
+            <div class="inline-block origin-left sm:rotate-0 sm:origin-center">
+                Median μ
+            </div>
+        </th>
+        <!-- 90th Percentile μ -->
+        <th class="py-2 px-2 border-b bg-white">
+            <div class="inline-block origin-left sm:rotate-0 sm:origin-center">
+                P90
+            </div>
+        </th>
+        <tbody>
+            {% for row in season_stats %}
+            <tr class="even:bg-gray-50">
+                <td class="py-2 px-1 border-b">{{ row.year }}</td>
+                <td class="py-2 px-1 border-b">{{ row.player_count }}</td>
+                <td class="py-2 px-1 border-b">{{ row.avg_conf_mu|round(2) }}</td>
+                <td class="py-2 px-1 border-b">{{ row.median_conf_mu|round(2) }}</td>
+                <td class="py-2 px-1 border-b">{{ row.p90_conf_mu|round(2) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="py-2 px-4 text-center">No data available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

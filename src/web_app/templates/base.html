@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
 </head>
 
 <body class="min-h-screen flex flex-col bg-gray-100">
@@ -51,6 +52,21 @@
                         </a>
                     </li>
                     <li>
+                        <a href="{{ url_for('stats.season_stats') }}" class="text-gray-900">
+                            Season Stats
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('stats.division_stats') }}" class="text-gray-900">
+                            Division Stats
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('stats.team_stats') }}" class="text-gray-900">
+                            Team Stats
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ url_for('faq.faq') }}" class="text-gray-900">
                             F.A.Q.
                         </a>
@@ -66,7 +82,7 @@
                 {% for crumb in breadcrumbs %}
                 {% if crumb.url %}
                 <a href="{{ crumb.url }}" class="text-blue-600 hover:text-blue-800">{{ crumb.name }}</a>
-                <span class="text-gray-500 mx-0">></span>
+                <span class="text-gray-500 mx-0">&gt;</span>
                 {% else %}
                 <span class="text-white">{{ crumb.name }}</span>
                 {% endif %}
@@ -76,7 +92,7 @@
         </div>
 
         <!-- Main Content -->
-        <main class="py-6 flex flex-col min-h-screen">
+        <main class="py-6 flex flex-col min-h-screen px-4 sm:px-6 lg:px-8">
             {% block content %}{% endblock %}
         </main>
 

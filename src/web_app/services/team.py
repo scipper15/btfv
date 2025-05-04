@@ -1,15 +1,13 @@
 from typing import Any
-import uuid
 from uuid import UUID
 
 from sqlalchemy import Numeric, Row, and_, case, cast, func
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session
 
 from shared.database.models import (
     Association,
     Division,
     DivisionName,
-    Match,
     MatchParticipant,
     Player,
     Season,
@@ -89,85 +87,6 @@ def get_all_team_members_with_stats(session: Session, team_id: UUID) -> dict[Any
             for member in team_members
         ],
     }
-
-
-def get_team_details(session: Session, team_id: uuid.UUID) -> Any:
-    """Get all players respective player information of a team."""
-    # Aliases for self-joins or complex relationships
-    PlayerAlias = aliased(Player)
-    MatchAlias = aliased(Match)
-    MatchParticipantAlias = aliased(MatchParticipant)
-    DivisionAlias = aliased(Division)
-    SeasonAlias = aliased(Season)
-
-    # Subquery to get the latest season the team played in
-    latest_season_subquery = (
-        session.query(TeamMembership.season_id)
-        .join(Team, TeamMembership.team_id == Team.id)
-        .join(SeasonAlias, TeamMembership.season_id == SeasonAlias.id)
-        .filter(Team.id == team_id)
-        .order_by(SeasonAlias.season_year.desc())
-        .limit(1)
-        .subquery()
-    )
-
-    # Subquery to get the last match each player played
-    last_match_subquery = (
-        session.query(
-            MatchParticipantAlias.player_id,
-            func.max(MatchAlias.date).label("last_match_date"),
-        )
-        .join(MatchAlias, MatchParticipantAlias.match_id == MatchAlias.id)
-        .group_by(MatchParticipantAlias.player_id)
-        .subquery()
-    )
-
-    # Main query to get players, team info, division, season, and last match details
-    query = (
-        session.query(
-            PlayerAlias.name,
-            PlayerAlias.image_file_name,
-            PlayerAlias.current_mu_combined,
-            PlayerAlias.current_sigma_combined,
-            PlayerAlias.current_mu_singles,
-            PlayerAlias.current_sigma_singles,
-            PlayerAlias.current_mu_doubles,
-            PlayerAlias.current_sigma_doubles,
-            Team.name.label("team_name"),
-            DivisionAlias.name.label("division_name"),
-            SeasonAlias.season_year.label("season_year"),
-            last_match_subquery.c.last_match_date,
-            # Calculate latest mu_after_doubles - 3 * sigma_after_doubles
-            (
-                MatchParticipantAlias.mu_after_doubles
-                - 3 * MatchParticipantAlias.sigma_after_doubles
-            ).label("doubles_performance"),
-        )
-        .join(TeamMembership, PlayerAlias.id == TeamMembership.player_id)
-        .join(Team, TeamMembership.team_id == Team.id)
-        .join(DivisionAlias, Team.division_id == DivisionAlias.id)
-        .join(SeasonAlias, TeamMembership.season_id == SeasonAlias.id)
-        .outerjoin(
-            MatchParticipantAlias, MatchParticipantAlias.player_id == PlayerAlias.id
-        )
-        .outerjoin(
-            last_match_subquery, last_match_subquery.c.player_id == PlayerAlias.id
-        )
-        .filter(Team.id == team_id)
-        .filter(TeamMembership.season_id == latest_season_subquery)
-        .group_by(
-            PlayerAlias.id,
-            Team.id,
-            DivisionAlias.id,
-            SeasonAlias.id,
-            last_match_subquery.c.last_match_date,
-            MatchParticipantAlias.mu_after_doubles,
-            MatchParticipantAlias.sigma_after_doubles,
-        )
-        .order_by(last_match_subquery.c.last_match_date.asc())
-    ).all()
-
-    return query
 
 
 def get_latest_team_membership(

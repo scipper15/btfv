@@ -35,8 +35,7 @@
         <td colspan="1" class="px-2 py-3 text-center font-bold">
           <a href="https://btfv.de/sportdirector/spielbericht/anzeigen/{{ match.BTFV_from_id }}/no_frame/"
             target="_blank">
-            {{ match.date.strftime('%d.%m.%Y') }} | Day: {{ match.match_day_nr }} | EV-Gain {{
-            "%+.2f"|format(match.mu_gain) }}
+            {{ match.date.strftime('%d.%m.%Y') }} | Day: {{ match.match_day_nr }}
           </a>
         </td>
         <td colspan="2" class="data-col px-2 py-3 text-right font-bold">
@@ -44,7 +43,7 @@
         </td>
       </tr>
       <!-- Mobile view -->
-      <tr class="bg-gray-300 text-gray-600 sticky z-20 top-16 md:hidden">
+      <tr class="bg-gray-300 text-gray-600 sticky z-20 top-20 md:hidden">
         <td colspan="1" class="data-col px-2 py-3 text-left font-bold">
           <a href="{{ url_for('team.team', team_id=match.home_team_id) }}">{{ match.home_team_name }}</a>
         </td>

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Division Statistics Overview{% endblock %}
+{% block content %}
+<div class="container mx-auto py-12">
+    {% include "partials/_stats_toggle.html" %}
+    <h2 class="text-2xl font-semibold mb-4">
+        Average expected Value for Players by Division and Season
+    </h2>
+
+    <!-- Filter-Form -->
+    <form method="get" class="mb-6 flex flex-wrap gap-4 items-end">
+        <div>
+            <label for="year" class="block text-sm font-medium text-gray-700">Season</label>
+            <select name="year" id="year"
+                class="mt-1 block w-full py-2 px-3 border rounded bg-white focus:ring-blue-500">
+                <option value="">All Seasons</option>
+                {% for y in years %}
+                <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="division" class="block text-sm font-medium text-gray-700">Division</label>
+            <select name="division" id="division"
+                class="mt-1 block w-full py-2 px-3 border rounded bg-white focus:ring-blue-500">
+                <option value="">All Divisions</option>
+                {% for d in divisions %}
+                <option value="{{ d }}" {% if d==selected_division %}selected{% endif %}>{{ d }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium
+                     rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none
+                     focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Filter
+            </button>
+        </div>
+    </form>
+
+    <!-- Tabelle -->
+    <div class="overflow-auto border rounded">
+        <table class="min-w-full bg-white text-center">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b z-10 bg-white">Season</th>
+                    <th class="py-2 px-4 border-b z-10 bg-white">Division</th>
+                    <th class="py-2 px-4 border-b z-10 bg-white">Region</th>
+                    <th class="py-2 px-4 border-b z-10 bg-white"># Players</th>
+                    <th class="py-2 px-4 border-b z-10 bg-white">Ø confident μ</th>
+                    <th class="py-2 px-4 border-b z-10 bg-white">Median confident μ</th>
+                    <th class="py-2 px-4 border-b z-10 bg-white">90th Percentile μ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for year, division, region, count, avg, med, p90_conf_mu in division_stats %}
+                <tr class="even:bg-gray-50">
+                    <td class="py-2 px-4 border-b">{{ year }}</td>
+                    <td class="py-2 px-4 border-b">{{ division.value }}</td>
+                    <td class="py-2 px-4 border-b">{{ region }}</td>
+                    <td class="py-2 px-4 border-b">{{ count }}</td>
+                    <td class="py-2 px-4 border-b">{{ avg|round(2) }}</td>
+                    <td class="py-2 px-4 border-b">{{ med|round(2) }}</td>
+                    <td class="py-2 px-4 border-b">{{ p90_conf_mu|round(2) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="py-2 text-center">No data available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

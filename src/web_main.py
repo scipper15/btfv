@@ -11,7 +11,7 @@ from web_app.routes.faq import faq_bp
 from web_app.routes.home import home_bp
 from web_app.routes.player_matches import player_bp  # type: ignore
 from web_app.routes.player_rankings import ranking_bp
-from web_app.routes.team import team_bp
+from web_app.routes.stats import stats_bp
 
 
 def create_app() -> Flask:
@@ -59,7 +59,7 @@ def create_app() -> Flask:
     app.register_blueprint(faq_bp, subdomain="btfv")
     app.register_blueprint(player_bp, url_prefix="/player", subdomain="btfv")
     app.register_blueprint(ranking_bp, url_prefix="/ranking", subdomain="btfv")
-    app.register_blueprint(team_bp, url_prefix="/team", subdomain="btfv")
+    app.register_blueprint(stats_bp, subdomain="btfv")
 
     @app.before_request
     def inject_session() -> None:

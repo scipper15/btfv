@@ -35,8 +35,9 @@
                     Team Statistics
                 </h2>
                 <p class="leading-relaxed text-base mb-4">Find out which teams dominate their respective divisions.</p>
-                <a class="text-teal-400 inline-flex items-center">Coming Soon
-                    <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                <a class="text-teal-400 inline-flex items-center" href="{{ url_for('stats.team_stats') }}">Show
+                    Team Statistics
+                    <svg fill=" none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                         stroke-width="2" class="w-4 h-4 ml-2" viewBox="0 0 24 24">
                         <path d="M5 12h14M12 5l7 7-7 7"></path>
                     </svg>
@@ -48,8 +49,9 @@
                 </h2>
                 <p class="leading-relaxed text-base mb-4">Compare divisions and find out which team is playing where.
                 </p>
-                <a class="text-teal-400 inline-flex items-center">Coming Soon
-                    <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                <a class="text-teal-400 inline-flex items-center" href="{{ url_for('stats.division_stats') }}">Show
+                    Division Statistics
+                    <svg fill=" none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                         stroke-width="2" class="w-4 h-4 ml-2" viewBox="0 0 24 24">
                         <path d="M5 12h14M12 5l7 7-7 7"></path>
                     </svg>
