@@ -1,0 +1,108 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for p in players %}
+    <div class="relative flex items-center bg-white rounded-2xl shadow p-4 hover:shadow-lg transition-shadow">
+        {# Badges oben links, mehrere möglich #}
+        <div class="absolute top-2 left-2 flex flex-col space-y-1">
+            {% if p.is_singles_monster %}
+            <span class="inline-block px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">
+                Singles Monster
+            </span>
+            {% endif %}
+            {% if p.is_doubles_monster %}
+            <span class="inline-block px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
+                Doubles Monster
+            </span>
+            {% endif %}
+            {% if p.is_singles_specialist %}
+            <span class="inline-block px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium">
+                Singles Specialist
+            </span>
+            {% endif %}
+            {% if p.is_doubles_specialist %}
+            <span class="inline-block px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                Doubles Specialist
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- Bild -->
+        <div class="flex-shrink-0">
+            {% if p.image_file_name %}
+            <img src="{{ url_for('static', filename='player_images/' ~ p.image_file_name) }}" alt="{{ p.name }}"
+                class="h-20 w-20 rounded-full object-cover border-2 border-gray-200">
+            {% else %}
+            <div class="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M5.121 17.804A12.072 12.072 0 0112 15c2.5 0 4.847.783 6.879 2.121M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Infos -->
+        <div class="ml-4 flex-1">
+            <h3 class="text-xl font-bold text-gray-800"><a
+                    href="{{ url_for('player.player', player_id=p.player_id) }}">{{ p.name }}</a></h3>
+            <div class="mt-2 space-y-1 text-sm text-gray-600">
+                <h4 class="text-sm font-medium text-gray-500">Season {{ p.season_year }}</h4>
+                <p>
+                    <span class="font-medium text-gray-700">Last Match:</span>
+                    {{ p.last_match_date }}
+                </p>
+                <p>
+                    <span class="font-medium text-gray-700">μ-combined:</span>
+                    {{ p.mu_confident_combined|round(2) }}
+                </p>
+                <p>
+                    <span class="font-medium text-gray-700">μ-singles:</span>
+                    {{ p.mu_confident_singles|round(2) }}
+                </p>
+                <p>
+                    <span class="font-medium text-gray-700">μ-doubles:</span>
+                    {{ p.mu_confident_doubles|round(2) }}
+                </p>
+                {% if p.season_year != current_year %}
+                <div class="mt-2 pt-2 border-t border-gray-200">
+                    <p>
+                        <span class="font-medium text-gray-700">μ combined (latest):</span>
+                        {{ p.current_mu_combined|round(2) }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<!-- Legende -->
+<div class="mt-8 p-4 bg-gray-50 rounded-lg">
+    <h4 class="text-base font-semibold mb-3">Badge Legend</h4>
+    <ul class="space-y-2 text-sm text-gray-700">
+        <li class="flex items-center">
+            <span class="inline-block px-2 py-1 rounded-full bg-green-100 text-green-800 font-bold text-xs mr-2">
+                Singles Monster
+            </span>
+            Player with the highest confident&nbsp;μ in Singles of this team
+        </li>
+        <li class="flex items-center">
+            <span class="inline-block px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-bold text-xs mr-2">
+                Doubles Monster
+            </span>
+            Player with the highest confident&nbsp;μ in Doubles of this team
+        </li>
+        <li class="flex items-center">
+            <span class="inline-block px-2 py-1 rounded-full bg-green-50 text-green-700 font-medium text-xs mr-2">
+                Singles Specialist
+            </span>
+            Player whose Singles μ&nbsp;− Doubles μ gap is largest in this team
+        </li>
+        <li class="flex items-center">
+            <span class="inline-block px-2 py-1 rounded-full bg-blue-50 text-blue-700 font-medium text-xs mr-2">
+                Doubles Specialist
+            </span>
+            Player whose Doubles μ&nbsp;− Singles μ gap is largest in this team
+        </li>
+    </ul>
+</div>

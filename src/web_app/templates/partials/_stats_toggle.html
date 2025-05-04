@@ -1,0 +1,10 @@
+<div class="inline-flex rounded-md shadow-sm bg-gray-200" role="group">
+    <a href="{{ url_for('stats.season_stats') }}" class="px-4 py-2 text-sm font-medium border-t border-b border-gray-200 focus:z-10 focus:ring-2 focus:ring-blue-500 focus:outline-none
+             {{ 'bg-white text-blue-600' if active_tab=='season' else 'text-gray-600 hover:bg-white' }}">Season
+        Stats</a>
+    <a href="{{ url_for('stats.division_stats') }}" class="px-4 py-2 text-sm font-medium border border-gray-200 rounded-l-md focus:z-10 focus:ring-2 focus:ring-blue-500 focus:outline-none
+        {{ 'bg-white text-blue-600' if active_tab=='division' else 'text-gray-600 hover:bg-white' }}">Division
+        Stats</a>
+    <a href="{{ url_for('stats.team_stats') }}" class="px-4 py-2 text-sm font-medium border-t border-b border-r border-gray-200 rounded-r-md focus:z-10 focus:ring-2 focus:ring-blue-500 focus:outline-none
+             {{ 'bg-white text-blue-600' if active_tab=='team' else 'text-gray-600 hover:bg-white' }}">Team Stats</a>
+</div>
