@@ -24,13 +24,17 @@ services:
       - PYTHONPATH=${PYTHONPATH}
       - LOGGING_ENV=${LOGGING_ENV}
       - SCRAPER_INTERVAL=${SCRAPER_INTERVAL}
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./data:/app/data
       - ./.env:/app/.env
+      - ./.env.dev:/app/.env.dev
       - ./entrypoint.sh:/app/entrypoint.sh
     entrypoint: ["/app/entrypoint.sh", "scraper"]
     depends_on:
       - db
+    networks:
+      - btfv
     env_file:
       - .env.dev
 
@@ -49,6 +53,7 @@ services:
       - ./data:/app/data
       - ./src:/app/src
       - ./.env:/app/.env
+      - ./.env.dev:/app/.env.dev
       - ./entrypoint.sh:/app/entrypoint.sh
     entrypoint: ["/app/entrypoint.sh", "web"]
     depends_on:
