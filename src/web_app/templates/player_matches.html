@@ -30,7 +30,7 @@
       1].date.strftime('%Y-%m-%d') %}
       <tr class="bg-gray-300 text-gray-600 sticky z-20 top-[108px] hidden md:table-row">
         <td colspan="2" class="data-col px-2 py-3 text-left font-bold">
-          <a href="{{ url_for('team.team', team_id=match.home_team_id) }}">{{ match.home_team_name }}</a>
+          <a href="{{ url_for('stats.team_stats', team_id=match.home_team_id) }}">{{ match.home_team_name }}</a>
         </td>
         <td colspan="1" class="px-2 py-3 text-center font-bold">
           <a href="https://btfv.de/sportdirector/spielbericht/anzeigen/{{ match.BTFV_from_id }}/no_frame/"
@@ -39,13 +39,13 @@
           </a>
         </td>
         <td colspan="2" class="data-col px-2 py-3 text-right font-bold">
-          <a href="{{ url_for('team.team', team_id=match.away_team_id) }}">{{ match.away_team_name }}</a>
+          <a href="{{ url_for('stats.team_stats', team_id=match.away_team_id) }}">{{ match.away_team_name }}</a>
         </td>
       </tr>
       <!-- Mobile view -->
       <tr class="bg-gray-300 text-gray-600 sticky z-20 top-20 md:hidden">
         <td colspan="1" class="data-col px-2 py-3 text-left font-bold">
-          <a href="{{ url_for('team.team', team_id=match.home_team_id) }}">{{ match.home_team_name }}</a>
+          <a href="{{ url_for('stats.team_stats', team_id=match.home_team_id) }}">{{ match.home_team_name }}</a>
         </td>
         <td colspan="1" class="px-2 py-3 text-center font-bold">
           <a href="https://btfv.de/sportdirector/spielbericht/anzeigen/{{ match.BTFV_from_id }}/no_frame/"
@@ -54,7 +54,7 @@
           </a>
         </td>
         <td colspan="1" class="data-col px-2 py-3 text-right font-bold">
-          <a href="{{ url_for('team.team', team_id=match.away_team_id) }}">{{ match.away_team_name }}</a>
+          <a href="{{ url_for('stats.team_stats', team_id=match.away_team_id) }}">{{ match.away_team_name }}</a>
         </td>
       </tr>
       {% endif %}
